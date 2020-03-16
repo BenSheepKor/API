@@ -15,7 +15,7 @@ var schema = buildSchema(`
       faculty: String,
     },
     type Mutation {
-      createUser(username: String, password: String): User
+      createUser(email: String, password: String): User
     }
 `);
 
