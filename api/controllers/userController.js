@@ -6,6 +6,10 @@ const mongoose = require('mongoose');
 // Get the User model 
 const User = mongoose.model('User');
 
+// Get bcrypt for password hasing and salt generation
+const bcrypt = require("bcrypt");
+
+
 /**
  * Callback function for GraphQL query "users"
  * 
@@ -53,9 +57,14 @@ exports.create_user = async req => {
             const userDoesExist = await checkUserExists(email);
 
             if (!userDoesExist) {
-                if(registerUser(email, password)){
-                    return {email};
-                }
+                
+                // Returns the result of saving the user in the database
+                return registerUser(email, password).then(
+                    user => {
+                        // format response so GraphQL can pick it up
+                        return {id: user.id , email: user.email};
+                    }
+                )
             }
 
             return new Error("DUPLICATE_EMAIL");
@@ -114,18 +123,23 @@ async function checkUserExists(email) {
  * @param {string} email 
  * @param {string} password 
  * 
- * @returns {boolean} True on successfull registration otherwise throws error
+ * @returns {number} Returns the id of the user. Throws error in case something goes wrong
  */
 async function registerUser(email, password) {
+
     const id = await generateId();
+
+    // takes about ~80ms
+    const salt = await bcrypt.genSalt();
+
+    // hashed password
+    password = await bcrypt.hash(password, salt);
 
     const user = new User({ id, email, password });
 
-    return user.save( error => {
-        if(error) throw new Error('UKNOWN');
+    const res = await user.save();
 
-        return true
-    })
+    return res;
 
 }
 

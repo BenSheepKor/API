@@ -7,15 +7,15 @@ var schema = buildSchema(`
         users: [User]
     },
     type User {
-      id: Int,
+      id: Int!,
       name: String,
-      email: String,
+      email: String!,
       username: String,
-      password: String
-      faculty: String,
+      password: String!
+      faculty: String!,
     },
     type Mutation {
-      register(email: String, password: String): User
+      register(email: String!, password: String!): User
     }
 `);
 
