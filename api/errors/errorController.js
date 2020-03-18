@@ -22,12 +22,15 @@ const errorKeys = require('./errorKeys');
  */
 exports.handleError = error => {
     // get message and status code from global error keys
-    const { message, statusCode } = errorKeys[error];
+    if (errorKeys.hasOwnProperty(error)) {
+        const { message, statusCode } = errorKeys[error];
 
-    // return error description
-    return {
-        error,
-        message,
-        statusCode
+        // return error description
+        return {
+            error,
+            message,
+            statusCode
+        }
     }
+
 }
