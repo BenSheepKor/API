@@ -43,7 +43,7 @@ exports.getUsers = () => {
  * @param req The request object of the mutation. For structure of the object, see the GraphQL schema
  * 
  */
-exports.create_user = async req => {
+exports.create_user = async (req, res) => {
     // get email and username from request
     const { email, password } = req;
 
