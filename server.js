@@ -18,7 +18,7 @@ var schema = require('./api/graphql/schema');
 var root = require('./api/graphql/resolver');
 
 
-var errorController = require('./api/controllers/errors/errorController');
+var errorController = require('./api/errors/errorController');
 
 // Use graphql for the API
 app.use('/graphql', express_graphql({
