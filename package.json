@@ -4,8 +4,8 @@
   "description": "The API for the project that Mr. Provatas and Mr. Pagakis are working on",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "test": "mocha tests/*.test.js"
   },
   "author": "Provatas Dimitris, Pagakis Dimosthenis",
   "license": "ISC",
