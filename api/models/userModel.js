@@ -6,18 +6,23 @@ var Schema = mongoose.Schema;
 var UserSchema = new Schema({
     id: {
         type: Number,
+        required: true,
     },
     name: {
         type: String,
+        default: '',
     },
     email: {
         type: String,
+        required: true,
     },
     password: {
         type: String,
+        required: true,
     },
     faculty: {
         type: String,
+        default: '',
     },
     joined_at: {
         type: Date,
@@ -26,6 +31,10 @@ var UserSchema = new Schema({
     last_log_in: {
         type: Date,
         default: Date.now
+    },
+    token: {
+        type: String,
+        default: '',
     }
 });
 
