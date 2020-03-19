@@ -147,15 +147,13 @@ async function verifyPassword(email, password){
     // Get exactly one user. We know one exists because we have already checked in login function
     return User.findOne({email}).then(user => {
         // compare the input password with the stored password of user object
-        return bcrypt.compare(password, user.password, (err, res) => {
-            if(err) throw new Error();
-            
-            // res is a boolean depending on the comparison of the two passwords
-            if(res) return generateToken();
+        const doesMatch =  bcrypt.compareSync(password, user.password);
 
-            return false;
-        })
-    })
+        // If passwords match generate the JWT token for authentication else return false
+        if(doesMatch) return generateToken();
+
+        return doesMatch;
+    });
 }
 
 /**

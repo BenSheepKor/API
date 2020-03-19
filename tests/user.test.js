@@ -94,23 +94,23 @@ describe('register user ', () => {
  * Test script for user log in. Given an email and a password user is successfully logged in and the client gets the token
  */
 
-// describe('login user', () => {
-//     it("successfully logs in a user with his email and password", done => {
-//         request.post('/graphql')
-//             .send({
-//                 query: `mutation{login(email: \"test@mocha.com\", password: \"safepassword123\"){token}}`
-//             })
-//             .expect(200)
-//             .end((err, res) => {
-//                 if(err) return done(err);
+describe('login user', () => {
+    it("successfully logs in a user with his email and password", done => {
+        request.post('/graphql')
+            .send({
+                query: `mutation{login(email: \"test@mocha.com\", password: \"safepassword123\"){token}}`
+            })
+            .expect(200)
+            .end((err, res) => {
+                if(err) return done(err);
 
-//                 res.body.data.login.should.have.property('token');
-//                 // to make sure password does not leak
-//                 res.body.data.login.should.not.have.property('password');
-//                 done();
-//             })
-//     })
-// })
+                res.body.data.login.should.have.property('token');
+                // to make sure password does not leak
+                res.body.data.login.should.not.have.property('password');
+                done();
+            })
+    })
+})
 
 /**
  * Test script for attempt to log in an unregistered user. 404 email not found
