@@ -7,6 +7,7 @@
 
 // Prevent object modification
 module.exports = Object.freeze({
+    // Register
     INVALID_EMAIL: {
         message: 'The email address is not valid',
         statusCode: 422,
@@ -18,6 +19,15 @@ module.exports = Object.freeze({
     INVALID_PASSWORD: {
         message: 'Password must have at least 8 characters and a number',
         statusCode: 422,
+    },
+    // Login
+    USER_DOES_NOT_EXIST:{
+        message: "This email is not register.",
+        statusCode: 404,
+    },
+    INCORRECT_PASSWORD: {
+        message: "Password is incorrect",
+        statusCode: 401,
     },
     UKNOWN: {
         message: 'Something went terribly wrong. We are wokring on it',
