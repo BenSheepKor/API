@@ -36,14 +36,14 @@ exports.getUsers = () => {
 }
 
 /**
- * Callback function for GraphQL mutation "createUser"
+ * Callback function for GraphQL mutation "register"
  * 
- * Simply returns the mutation's parameters for now
+ * Checks email and password validity, duplicate email registries and registers user if all constraints are ok.
  * 
  * @param req The request object of the mutation. For structure of the object, see the GraphQL schema
  * 
  */
-exports.create_user = async (req, res) => {
+exports.create_user = async req => {
     // get email and username from request
     const { email, password } = req;
 
@@ -78,6 +78,35 @@ exports.create_user = async (req, res) => {
 }
 
 /**
+ * Callback function for GraphQL mutation "login"
+ * 
+ * Checks for registered email and logs in user if password is correct
+ * 
+ * @param req The request object of the mutation. For structure of the object, see the GraphQL schema
+ * 
+ */
+exports.login = async req => {
+    // get email and password  from the database
+    const { email, password } = req;
+
+    // make sure user is registered on the platform
+    const userDoesExist = await checkUserExists(email);
+
+    if(userDoesExist){
+        // Check for the password and get the token if it is correct
+        const token = await verifyPassword(email, password);
+
+        // If password compare is true return the token
+        if(token) return token;
+
+        // If passwords missmatch throw respective error
+        throw new Error("INCORRECT_PASSWORD");
+    }
+
+    throw new Error("USER_DOES_NOT_EXIST")
+}
+
+/**
  * Function that gets the user email upon registration and checks its validity against a regex
  * Regex taken from https://emailregex.com/. 
  *  
@@ -106,6 +135,30 @@ function validatePassword(password) {
 }
 
 /**
+ * Function that compares the input password of user with the given email with the stored password in the database. If comparison is truthy 
+ * it generates and returns a token. If comparison is falsy, it returns false
+ * @param {String} email 
+ * @param {String} password 
+ * 
+ * @returns {String | Boolean} Returns a JWT token if passwords are the same. Otherwise, returns false
+ */
+
+async function verifyPassword(email, password){
+    // Get exactly one user. We know one exists because we have already checked in login function
+    return User.findOne({email}).then(user => {
+        // compare the input password with the stored password of user object
+        return bcrypt.compare(password, user.password, (err, res) => {
+            if(err) throw new Error();
+            
+            // res is a boolean depending on the comparison of the two passwords
+            if(res) return generateToken();
+
+            return false;
+        })
+    })
+}
+
+/**
  * Function that searches the database for a user email upon registration to check for duplicates. Fires after input validation
  * @param {string} email 
  * 
@@ -113,8 +166,18 @@ function validatePassword(password) {
  */
 async function checkUserExists(email) {
     return User.findOne({ email: email }).then((user, error) => {
-        return user
+        if(user) return user;
+
+        return false;
     })
+}
+
+/**
+ * Function that generates a JWT token for the user after succesffull login
+ * @returns {String} Dummy hard coded string for now
+ */
+function generateToken(){
+    return {token: '13asd123asd123sd'};
 }
 
 /**
@@ -142,6 +205,7 @@ async function registerUser(email, password) {
     return res;
 
 }
+
 
 /**
  * Function that generates the ID for the newly registerd user. MongoDB provides an _id field but it is not readable.

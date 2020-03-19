@@ -14,8 +14,12 @@ var schema = buildSchema(`
       password: String!
       faculty: String!,
     },
+    type JWT {
+      token: String!
+    },
     type Mutation {
-      register(email: String!, password: String!): User!
+      register(email: String!, password: String!): User!,
+      login(email: String!, password: String!): JWT!
     }
 `);
 
