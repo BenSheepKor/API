@@ -9,6 +9,12 @@ const User = mongoose.model('User');
 // Get bcrypt for password hasing and salt generation
 const bcrypt = require("bcrypt");
 
+// JWT package for Node
+const nJwt = require('njwt');
+
+// configuration file for JWT
+const jwtConfigs = require("../jwt/config.dev");
+
 
 /**
  * Callback function for GraphQL query "users"
@@ -96,8 +102,14 @@ exports.login = async req => {
         // Check for the password and get the token if it is correct
         const token = await verifyPassword(email, password);
 
-        // If password compare is true return the token
-        if(token) return token;
+        // If password compare is true store the token in the database and return the token to the client
+        if(token) {
+            // userDoesExist is a User document at this point
+            const user = userDoesExist;
+            storeToken(user.id, token.token);
+
+            return token;
+        }
 
         // If passwords missmatch throw respective error
         throw new Error("INCORRECT_PASSWORD");
@@ -160,7 +172,7 @@ async function verifyPassword(email, password){
  * Function that searches the database for a user email upon registration to check for duplicates. Fires after input validation
  * @param {string} email 
  * 
- * @returns {boolean} True or false depending on the existence of duplicate emails
+ * @returns {User | boolean} User object or false depending on the existence of duplicate emails
  */
 async function checkUserExists(email) {
     return User.findOne({ email: email }).then((user, error) => {
@@ -175,7 +187,21 @@ async function checkUserExists(email) {
  * @returns {String} Dummy hard coded string for now
  */
 function generateToken(){
-    return {token: '13asd123asd123sd'};
+    const jwt = nJwt.create(jwtConfigs.claims, jwtConfigs.signingKey);
+
+
+    // The token that the client receives
+    const token = jwt.compact();
+
+    return {token};
+}
+
+function storeToken(userId, token){
+    return User.findOneAndUpdate({id: userId}, {token}, (err, user) => {
+        if (err) throw new Error(err);
+
+        return true;
+    })
 }
 
 /**
