@@ -9,6 +9,10 @@ var express = require('express'),
   // Register the model
   User = require('./api/models/userModel');
 
+// Cron job to get the weather information
+require('./cron/weather.cron');
+
+
 // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true` by default, you need to set it to false.
 mongoose.set('useFindAndModify', false);
 
