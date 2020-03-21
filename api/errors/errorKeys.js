@@ -29,6 +29,10 @@ module.exports = Object.freeze({
         message: "Password is incorrect",
         statusCode: 401,
     },
+    NO_AUTH: {
+        message: "You are not authorized to make this call",
+        statusCode: 401,
+    },
     UKNOWN: {
         message: 'Something went terribly wrong. We are wokring on it',
         statusCode: 500

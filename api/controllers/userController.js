@@ -42,7 +42,19 @@ exports.getUsers = () => {
 }
 
 exports.me = async (args, req) => {
-    // console.log(args, req.headers.authorization)
+    const token = req.headers.authorization.split('Bearer ')[1];
+
+    if (token) {
+        if (await isAuthorized(token)) {
+            return User.findOne({token}).then( (user, error) => {
+                if(error) throw new Error(error);
+
+                return user;
+            })
+        }
+    }
+
+    throw new Error("NO_AUTH");
 }
 
 
@@ -120,7 +132,7 @@ exports.login = async req => {
 
     // Make sure a password is sent
     if (password) {
-        let token, userDoesExist, isUsername= false;
+        let token, userDoesExist, isUsername = false;
 
         // user wants to login using email address
         if (!username && email != '') {
@@ -139,9 +151,9 @@ exports.login = async req => {
         if (userDoesExist) {
 
             // Check for the password and get the token if it is correct
-            if(isUsername) {
+            if (isUsername) {
                 token = await verifyPassword(username, password, true);
-            }else{
+            } else {
                 token = await verifyPassword(email, password);
             }
 
@@ -222,6 +234,16 @@ async function verifyPassword(checkValue, password, isUsername = false) {
 
         return doesMatch;
     });
+}
+
+async function isAuthorized(token) {
+    return User.findOne({ token }).then((user, error) => {
+        if (error) throw new Error(error)
+
+        if (user) return user.token == token;
+
+        return false;
+    })
 }
 
 /**
