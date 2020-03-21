@@ -22,7 +22,7 @@ module.exports = Object.freeze({
     },
     // Login
     USER_DOES_NOT_EXIST:{
-        message: "This email is not register.",
+        message: "We did not find a user mathing the credentials",
         statusCode: 404,
     },
     INCORRECT_PASSWORD: {

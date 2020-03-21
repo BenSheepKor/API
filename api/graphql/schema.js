@@ -5,6 +5,7 @@ var { buildSchema } = require('graphql');
 var schema = buildSchema(`
     type Query {
         users: [User]
+        me: User
     },
     type User {
       id: Int!,
@@ -19,7 +20,7 @@ var schema = buildSchema(`
     },
     type Mutation {
       register(email: String!, password: String!): User!,
-      login(email: String!, password: String!): JWT!
+      login(email: String, username: String, password: String!): JWT!
     }
 `);
 

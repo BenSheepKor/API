@@ -41,6 +41,11 @@ exports.getUsers = () => {
     });
 }
 
+exports.me = async (args, req) => {
+    // console.log(args, req.headers.authorization)
+}
+
+
 /**
  * Callback function for GraphQL mutation "register"
  * 
@@ -63,12 +68,12 @@ exports.create_user = async req => {
             const userDoesExist = await checkUserExists(email);
 
             if (!userDoesExist) {
-                
+
                 // Returns the result of saving the user in the database
                 return registerUser(email, password).then(
                     user => {
                         // format response so GraphQL can pick it up
-                        return {id: user.id , email: user.email};
+                        return { id: user.id, email: user.email };
                     }
                 )
             }
@@ -83,48 +88,91 @@ exports.create_user = async req => {
 
 }
 
+
 /**
  * Callback function for GraphQL mutation "login"
  * 
- * Checks for registered email and logs in user if password is correct
+ * A user will be able to login with either email or username
+ * 
+ * Checks for registered user and logs them in if password is correct
  * 
  * @param req The request object of the mutation. For structure of the object, see the GraphQL schema
  * 
  */
 exports.login = async req => {
-    // get email and password  from the database
-    const { email, password } = req;
+    // prepare variables
+    let email, username, password = '';
 
-    // make sure user is registered on the platform
-    const userDoesExist = await checkUserExists(email);
-
-    if(userDoesExist){
-        // Check for the password and get the token if it is correct
-        const token = await verifyPassword(email, password);
-
-        // If password compare is true store the token in the database and return the token to the client
-        if(token) {
-            // userDoesExist is a User document at this point
-            const user = userDoesExist;
-            storeToken(user.id, token.token);
-
-            return token;
-        }
-
-        // If passwords missmatch throw respective error
-        throw new Error("INCORRECT_PASSWORD");
+    // Get email if it exists
+    if (req.hasOwnProperty('email')) {
+        email = req.email;
     }
 
-    throw new Error("USER_DOES_NOT_EXIST")
+    // Get username if it exists
+    if (req.hasOwnProperty('username')) {
+        username = req.username;
+    }
+
+    // Get password
+    password = req.password;
+
+
+
+    // Make sure a password is sent
+    if (password) {
+        let token, userDoesExist, isUsername= false;
+
+        // user wants to login using email address
+        if (!username && email != '') {
+            // sent email exists in the database
+            userDoesExist = await checkUserExists(email);
+        }
+
+        // user wants to login using username
+        if (!email && username != '') {
+            // sent username exists in the database
+            userDoesExist = await checkUserExists(username, true);
+            isUsername = true;
+        }
+
+        // continue if user exists
+        if (userDoesExist) {
+
+            // Check for the password and get the token if it is correct
+            if(isUsername) {
+                token = await verifyPassword(username, password, true);
+            }else{
+                token = await verifyPassword(email, password);
+            }
+
+            // If password compare is true store the token in the database and return the token to the client
+            if (token) {
+                // userDoesExist is a User document at this point
+                const user = userDoesExist;
+                storeToken(user.id, token.token);
+
+                return token;
+            }
+
+            // If passwords missmatch throw respective error
+            throw new Error("INCORRECT_PASSWORD");
+        }
+
+        throw new Error("USER_DOES_NOT_EXIST");
+
+    }
+
+    throw new Error("INCORRECT_PASSWORD");
+
 }
 
 /**
  * Function that gets the user email upon registration and checks its validity against a regex
  * Regex taken from https://emailregex.com/. 
  *  
- * @param {string} email 
+ * @param {String} email 
  * 
- * @returns {boolean} True or false depending on the validity of the email against the regex 
+ * @returns {Boolean} True or false depending on the validity of the email against the regex 
  */
 function validateEmail(email) {
     // taken from https://emailregex.com/
@@ -138,9 +186,9 @@ function validateEmail(email) {
  * Function that gets the user password upon registration and checks its validity
  * A password is valid only if it contains at least a number and is longer than 8 characters
  * 
- * @param {string} password 
+ * @param {String} password 
  * 
- * @returns {boolean} True or false depending on the validity of the password
+ * @returns {Boolean} True or false depending on the validity of the password
  */
 function validatePassword(password) {
     return password.length > 8 && /\d/.test(password);
@@ -149,55 +197,75 @@ function validatePassword(password) {
 /**
  * Function that compares the input password of user with the given email with the stored password in the database. If comparison is truthy 
  * it generates and returns a token. If comparison is falsy, it returns false
- * @param {String} email 
- * @param {String} password 
+ * @param {String} checkValue It can be either an email or a username. Determined by isUsername parameter
+ * @param {String} password The sent password
+ * @param {Boolean} isUsername Boolean value that determines whether to search by email or username. Defaults to false, so user is filtered by email
  * 
  * @returns {String | Boolean} Returns a JWT token if passwords are the same. Otherwise, returns false
  */
 
-async function verifyPassword(email, password){
+async function verifyPassword(checkValue, password, isUsername = false) {
+    let filterObj = {};
+
+    if (isUsername) {
+        Object.assign(filterObj, { username: checkValue });
+    } else {
+        Object.assign(filterObj, { email: checkValue });
+    }
     // Get exactly one user. We know one exists because we have already checked in login function
-    return User.findOne({email}).then(user => {
+    return User.findOne(filterObj).then(user => {
         // compare the input password with the stored password of user object
-        const doesMatch =  bcrypt.compareSync(password, user.password);
+        const doesMatch = bcrypt.compareSync(password, user.password);
 
         // If passwords match generate the JWT token for authentication else return false
-        if(doesMatch) return generateToken();
+        if (doesMatch) return generateToken();
 
         return doesMatch;
     });
 }
 
 /**
- * Function that searches the database for a user email upon registration to check for duplicates. Fires after input validation
- * @param {string} email 
+ * Function that searches the database for a user email or username upon registration and login to check for duplicates. Fires after input validation
+ * @param {String} checkValue It can be either an email or a username. Determined by isUsername parameter
+ * @param {Boolean} isUsername Boolean value that determines whether to search by email or username. Defaults to false, so user is filtered by email
  * 
- * @returns {User | boolean} User object or false depending on the existence of duplicate emails
+ * @returns {User | Boolean} User object or false depending on the existence of duplicate emails
  */
-async function checkUserExists(email) {
-    return User.findOne({ email: email }).then((user, error) => {
-        if(user) return user;
+function checkUserExists(checkValue, isUsername = false) {
+    let filterObj = {}
+
+    if (isUsername) {
+        Object.assign(filterObj, { username: checkValue });
+    } else {
+        Object.assign(filterObj, { email: checkValue })
+    }
+
+    return User.findOne(filterObj).then((user, error) => {
+        if (error) throw new Error(err);
+
+        if (user) return user;
 
         return false;
     })
 }
 
+
 /**
  * Function that generates a JWT token for the user after succesffull login
  * @returns {String} Dummy hard coded string for now
  */
-function generateToken(){
+function generateToken() {
     const jwt = nJwt.create(jwtConfigs.claims, jwtConfigs.signingKey);
 
 
     // The token that the client receives
     const token = jwt.compact();
 
-    return {token};
+    return { token };
 }
 
-function storeToken(userId, token){
-    return User.findOneAndUpdate({id: userId}, {token}, (err, user) => {
+function storeToken(userId, token) {
+    return User.findOneAndUpdate({ id: userId }, { token }, (err, user) => {
         if (err) throw new Error(err);
 
         return true;
@@ -207,10 +275,10 @@ function storeToken(userId, token){
 /**
  * Function that persists the newly registered user in the database. Both email and password have already been validated
  * 
- * @param {string} email 
- * @param {string} password 
+ * @param {String} email 
+ * @param {String} password 
  * 
- * @returns {number} Returns the id of the user. Throws error in case something goes wrong
+ * @returns {Number} Returns the id of the user. Throws error in case something goes wrong
  */
 async function registerUser(email, password) {
 
@@ -238,7 +306,7 @@ async function registerUser(email, password) {
  * The function queries the database fetching results for the lastly inserted user. If they exists, it increments their id by 1 and returns that. Defaults to 1
  * if the user is the first one registed.
  * 
- * @returns {number} The id of the user about to register
+ * @returns {Number} The id of the user about to register
  * 
  */
 async function generateId() {
