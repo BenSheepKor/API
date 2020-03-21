@@ -6,12 +6,15 @@ var express = require('express'),
   port = process.env.PORT || 4000,
   // Use mongoose to connect and interact with mongodb
   mongoose = require('mongoose'),
+  // cors
+  cors = require('cors'),
   // Register the model
   User = require('./api/models/userModel');
 
 // Cron job to get the weather information
 require('./cron/weather.cron');
 
+app.options('*', cors()) // include before other routes 
 
 // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true` by default, you need to set it to false.
 mongoose.set('useFindAndModify', false);
