@@ -3,7 +3,7 @@ UserController = require('../controllers/userController');
 
 // Root resolver for the GraphQL endpoints' callbacks
 const root = {
-    users: UserController.getUsers(),
+    users: () => { return UserController.getUsers()},
     register: (args) => { return UserController.create_user(args) },
     login: (args) => { return UserController.login(args)},
 }
