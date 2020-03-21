@@ -14,6 +14,7 @@ var express = require('express'),
 // Cron job to get the weather information
 require('./cron/weather.cron');
 
+app.use(cors());
 app.options('*', cors()) // include before other routes 
 
 // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true` by default, you need to set it to false.
