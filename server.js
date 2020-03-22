@@ -12,7 +12,7 @@ var express = require('express'),
   User = require('./api/models/userModel');
 
 // Cron job to get the weather information
-require('./cron/weather.cron');
+require('./cron/weather/weather.cron');
 
 app.use(cors());
 app.options('*', cors()) // include before other routes 
