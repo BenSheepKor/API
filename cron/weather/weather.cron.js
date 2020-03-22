@@ -15,10 +15,11 @@ const COUNT = 5;
 userController.getUsers().then(users => {
     // Loop through users
     users.forEach(user => {
+        // default coordinates for Corfu, our main point of interest for alpha
         let lat = 39.6243;
         let lng = 19.9217;
 
-        if(user.location.lat && user.location.lng){
+        if (user.location.lat && user.location.lng) {
             lat = user.location.lat;
             lng = user.location.lng;
         }
@@ -27,10 +28,12 @@ userController.getUsers().then(users => {
 
         // If user location is not known, default to Corfu, which is the "release base" of our software
         // Cron job that runs every 3 hours. Gets a 5 day forecast for every 3 hours for a specific location given by latitude and longtitude
-        cron.schedule('0 */3 * * *', () => {
+        // 0 */3 * * *
+        cron.schedule('* * * * *', async () => {
+            await deleteWeatherData();
             axios.get(url).then(async res => {
                 const success = await prepareAndSave(res);
-                notifyDiscordChannel(success, lat, lng );
+                notifyDiscordChannel(success, lat, lng);
 
             })
         });
@@ -62,7 +65,7 @@ async function prepareAndSave(weatherObj) {
         };
 
         // Loop through the weather reports. there are 40 reports. 8 reports per day for 5 day
-        for(let i = 0; i < COUNT; i++){
+        for (let i = 0; i < COUNT; i++) {
             // get the current report
             const report = weatherList[i];
 
@@ -109,6 +112,23 @@ function notifyDiscordChannel(success, lat, lng) {
     const body = { content };
 
     axios.post('https://discordapp.com/api/webhooks/691348810835820595/TpPlu4t_78e_g4de7r00noLKpBEUbu3fZJS0rP3DzaoXyGYFofGF6qiNb4-_eXc8HsIu', body).then(res => {
+        // do nothing
+    }).catch(err => {
+        // do nothing
+    });
+}
 
-    }).catch(err => { console.log(err) });
+/**
+ * Function that deletes all data when the cron job starts. That way, we ensure that there is no weather data for prior times
+ * After alpha release this is prone to change
+ * @change
+ * 
+ * @returns {Boolean} Returns true if deletion was successful
+ */
+async function deleteWeatherData() {
+    return Weather.deleteMany({}).then((res, err) => {
+        if (err) throw new Error(err);
+
+        return res;
+    })
 }
