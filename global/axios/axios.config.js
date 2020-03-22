@@ -1,6 +1,6 @@
-const axios = require('axios');
+const ax = require('axios');
 
-const globalAxios = axios.create({
+const axios = ax.create({
     timeout: 1000,
     headers: { 'content-type' : 'application/json; charset=utf-8' }
 })
@@ -11,8 +11,8 @@ const success = res => {
     }
 };
 
-globalAxios.interceptors.response.use(
+axios.interceptors.response.use(
     res => success(res),
 );
 
-module.exports = globalAxios;
+module.exports = axios;
