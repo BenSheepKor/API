@@ -38,7 +38,14 @@ var UserSchema = new Schema({
     token: {
         type: String,
         default: '',
+    },
+    location: {
+        lat: Number,
+        lng: Number,
     }
 });
+
+// Indexes used for users. 1 means ASC. -1 means DESC
+UserSchema.index({id: 1 , email: 1});
 
 module.exports = mongoose.model('User', UserSchema);
