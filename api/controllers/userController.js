@@ -87,7 +87,9 @@ exports.create_user = async req => {
                         // format response so GraphQL can pick it up
                         return { id: user.id, email: user.email };
                     }
-                )
+                ).catch(err => {
+                    console.log(err)
+                })
             }
 
             return new Error("DUPLICATE_EMAIL");
