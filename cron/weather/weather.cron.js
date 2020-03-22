@@ -9,30 +9,48 @@ const userController = require('../../api/controllers/userController');
 // get access to the weather model so we can create an instance
 const Weather = require('../../api/models/weatherModel');
 
-const COUNT = 5;
+/**
+ * Count to limit the number of weather reports that are stored in the database per cron job. For more details
+ * 
+ * @see prepareAndSave
+ */
+const COUNT = 8;
 
 // Get all users from the database
 userController.getUsers().then(users => {
     // Loop through users
     users.forEach(user => {
         // default coordinates for Corfu, our main point of interest for alpha
-        let lat = 39.6243;
-        let lng = 19.9217;
+        let lat = weatherConfig.DEFAULT_LOCATION.LAT;
+        let lng = weatherConfig.DEFAULT_LOCATION.LNG;
 
+        // if user location is known, change the url coordinates
         if (user.location.lat && user.location.lng) {
             lat = user.location.lat;
             lng = user.location.lng;
         }
 
+        // open weather API request url
         let url = `${weatherConfig.API_URL}forecast?lat=${lat}&lon=${lng}&units=${weatherConfig.UNITS}&appid=${weatherConfig.APP_ID}`;
 
         // If user location is not known, default to Corfu, which is the "release base" of our software
         // Cron job that runs every 3 hours. Gets a 5 day forecast for every 3 hours for a specific location given by latitude and longtitude
         // 0 */3 * * *
         cron.schedule('* * * * *', async () => {
+            /**
+             * Delete data. No prior timestamp data wanted during dev. Might change after alpha
+             * 
+             * @see deleteWeatherData
+             */
+
             await deleteWeatherData();
+
+            // shot the request to the open weather API
             axios.get(url).then(async res => {
+                // save data
                 const success = await prepareAndSave(res);
+
+                // use discord bot. Used during dev for debugging purposes
                 notifyDiscordChannel(success, lat, lng);
 
             })
