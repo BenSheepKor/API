@@ -36,7 +36,7 @@ userController.getUsers().then(users => {
         // If user location is not known, default to Corfu, which is the "release base" of our software
         // Cron job that runs every 3 hours. Gets a 5 day forecast for every 3 hours for a specific location given by latitude and longtitude
         // 0 */3 * * *
-        cron.schedule('* * * * *', async () => {
+        cron.schedule('0 */3 * * *', async () => {
             /**
              * Delete data. No prior timestamp data wanted during dev. Might change after alpha
              * 
