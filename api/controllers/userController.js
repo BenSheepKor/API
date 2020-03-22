@@ -15,6 +15,9 @@ const nJwt = require('njwt');
 // configuration file for JWT
 const jwtConfigs = require("../jwt/config.dev");
 
+// get axios to use iplocate
+const axios = require('../../global/axios/axios.config');
+
 
 /**
  * Callback function for GraphQL query "users"
@@ -41,20 +44,69 @@ exports.getUsers = () => {
     });
 }
 
+/**
+ * Callback function for "me" query
+ * 
+ * Authenticates the user using a Bearer token. If token is valid, returns data for the specific user.
+ * 
+ * It also serves a secondary purpose. It uses the IP of the user to get their location. If location is retrieved (lat,lng) a test is run against the user to see if their location is known
+ * 
+ * If it is known, a check runs against saved location. If locations are near each other the saved location is not updated. 
+ * If the difference is significant, the saved location gets updated
+ */
 exports.me = async (args, req) => {
-    const token = req.headers.authorization.split('Bearer ')[1];
+    // Check that an authorization was sent
+    if (req.headers.authorization) {
+        // Check that it as indeed a Bearer token
+        if (req.headers.authorization.indexOf('Bearer ') != -1) {
+            // remove the Bearer prefix and store the token
+            const token = req.headers.authorization.split('Bearer ')[1];
 
-    if (token) {
-        if (await isAuthorized(token)) {
-            return User.findOne({token}).then( (user, error) => {
-                if(error) throw new Error(error);
 
-                return user;
-            })
+            // check that token was set
+            if (token) {
+                // check user is authorized
+                if (await isAuthorized(token)) {
+
+                    // get user's coordinates from IP address
+                    const { lat, lng } = getUserIp(req);
+
+                    // use token to get user's data
+                    return User.findOne({ token }).then((user, error) => {
+                        if (error) throw new Error(error);
+
+                        // Run the location checks before returning data to user
+                        /**
+                         * This might make the endpoint a bit slower. discuss with team
+                         */
+                        // check that coordinates were received by the ip lookup
+                        if (lat && lng) {
+                            // if user location is not already known, simply store the coordinates without any further checking
+                            if (!user.lat && !user.lng) {
+                                User.findByIdAndUpdate(user.id, { "location.lat": lat, "location.lng": lng }).then((user, error) => {
+                                    if (error) throw new Error();
+                                })
+                            }
+
+                            // experimenting. A difference of 0.04 is considered significant
+                            if (Math.abs(user.lat - lat) >= 0.04 || Math.abs(user.lng - lng) >= 0.04) {
+                                User.findByIdAndUpdate(user.id, { "location.lat": lat, "location.lng": lng }).then((user, error) => {
+                                    if (error) throw new Error();
+                                })
+                            }
+
+                        }
+                        return user;
+                    })
+                }
+            }
+
+            throw new Error("NO_AUTH");
         }
+
     }
 
-    throw new Error("NO_AUTH");
+
 }
 
 
@@ -341,4 +393,31 @@ async function generateId() {
 
         return 1;
     })
+}
+
+
+/**
+ * Function that uses the request object to find the IP of the user. The IP run against an IP->Location service so we can locate the user
+ * @param {Object} request 
+ */
+function getUserIp(request) {
+    if (request) {
+        let ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
+
+        // ::ffff: is a subnet prefix for IPv4 addresses that are placed inside an IPv6
+        if (ip.indexOf('::ffff:') !== -1) {
+            ip = ip.split('::ffff:')[1];
+        }
+
+        return axios.get(`https://www.iplocate.io/api/lookup/${ip}`).then(
+            res => {
+                if (res.latitude && res.longitude) {
+                    return {
+                        lat: res.latitude,
+                        lng: res.longiuted,
+                    };
+                }
+            }
+        )
+    }
 }
