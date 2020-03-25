@@ -60,7 +60,7 @@ userController.getUsers().then(users => {
                     const success = await prepareAndSave(res);
 
                     // use discord bot. Used during dev for debugging purposes
-                    // notifyDiscordChannel(success, lat, lng);
+                    notifyDiscordChannel(success, lat, lng);
 
                 })
             });
