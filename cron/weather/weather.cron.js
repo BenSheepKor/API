@@ -16,8 +16,14 @@ const Weather = require('../../api/models/weatherModel');
  */
 const COUNT = 8;
 
+// Array of locations already pinged. If weather data for a location is already existing, do not fire the API again
+let LOCATIONS = [];
+
 // Get all users from the database
 userController.getUsers().then(users => {
+    // empty LOCATIONS array when cron is about to start
+    LOCATIONS = [];
+
     // Loop through users
     users.forEach(user => {
         // default coordinates for Corfu, our main point of interest for alpha
@@ -30,31 +36,37 @@ userController.getUsers().then(users => {
             lng = user.location.lng;
         }
 
-        // open weather API request url
-        let url = `${weatherConfig.API_URL}forecast?lat=${lat}&lon=${lng}&units=${weatherConfig.UNITS}&appid=${weatherConfig.APP_ID}`;
 
-        // If user location is not known, default to Corfu, which is the "release base" of our software
-        // Cron job that runs every 3 hours. Gets a 5 day forecast for every 3 hours for a specific location given by latitude and longtitude
-        // 0 */3 * * *
-        cron.schedule('0 */3 * * *', async () => {
-            /**
-             * Delete data. No prior timestamp data wanted during dev. Might change after alpha
-             * 
-             * @see deleteWeatherData
-             */
+        // check that the current user's location has not been pinged for yet. If it has, continue to next user
+        if (checkLocationPinged(lat, lng)) {
 
-            await deleteWeatherData();
+            // open weather API request url
+            let url = `${weatherConfig.API_URL}forecast?lat=${lat}&lon=${lng}&units=${weatherConfig.UNITS}&appid=${weatherConfig.APP_ID}`;
 
-            // shot the request to the open weather API
-            axios.get(url).then(async res => {
-                // save data
-                const success = await prepareAndSave(res);
+            // If user location is not known, default to Corfu, which is the "release base" of our software
+            // Cron job that runs every 3 hours. Gets a 5 day forecast for every 3 hours for a specific location given by latitude and longtitude
+            // 0 */3 * * *
+            cron.schedule('0 */3 * * *', async () => {
+                /**
+                 * Delete data. No prior timestamp data wanted during dev. Might change after alpha
+                 * 
+                 * @see deleteWeatherData
+                 */
 
-                // use discord bot. Used during dev for debugging purposes
-                notifyDiscordChannel(success, lat, lng);
+                await deleteWeatherData();
 
-            })
-        });
+                // shot the request to the open weather API
+                axios.get(url).then(async res => {
+                    // save data
+                    const success = await prepareAndSave(res);
+
+                    // use discord bot. Used during dev for debugging purposes
+                    notifyDiscordChannel(success, lat, lng);
+
+                })
+            });
+        }
+
     })
 })
 
@@ -82,7 +94,7 @@ async function prepareAndSave(weatherObj) {
             lng: weatherObj.city.coord.lon || 0,
         };
 
-        // Loop through the weather reports. there are 40 reports. 8 reports per day for 5 day
+        // Loop through the weather reports. there are 40 reports. 8 reports per day for 5 days
         for (let i = 0; i < COUNT; i++) {
             // get the current report
             const report = weatherList[i];
@@ -149,4 +161,34 @@ async function deleteWeatherData() {
 
         return res;
     })
+}
+
+/**
+ * Function that is used by the weather cron to decide wether it should ping for the current user's location
+ * 
+ * @param {Number} lat The langitude of the current user's location
+ * @param {Number} lng The longtitude of the current user's location
+ */
+
+function checkLocationPinged(lat, lng) {
+    // LOCATIONS is empty because this is the first user. add location to array and return early
+    if (LOCATIONS.length == 0) {
+        LOCATIONS.push({lat, lng});
+        return false;
+    }
+
+    // loop over the LOCATIONS array of locations that are already pinged
+    LOCATIONS.forEach(location => {
+
+        // check that the difference between coordinates is considered significant
+        if (Math.abs(location.lat - lat) >= 0.4 || Math.abs(location.lng - lng) >= 0.4) {
+
+            // if the difference is significant, push the location to array as a different pinged location and return false
+            LOCATIONS.push(location);
+            return false;
+        }
+
+    });
+
+    return true;
 }
