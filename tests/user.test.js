@@ -102,7 +102,7 @@ describe('login user', () => {
             })
             .expect(200)
             .end((err, res) => {
-                if(err) return done(err);
+                if (err) return done(err);
 
                 res.body.data.login.should.have.property('token');
                 // to make sure password does not leak
@@ -123,7 +123,7 @@ describe('login user', () => {
             })
             .expect(500)
             .end((err, res) => {
-                if(err) return done(err);
+                if (err) return done(err);
 
                 res.body.errors[0].statusCode.should.equal(404)
                 done();
@@ -142,10 +142,53 @@ describe('login user', () => {
             })
             .expect(500)
             .end((err, res) => {
-                if(err) return done(err);
+                if (err) return done(err);
 
                 res.body.errors[0].statusCode.should.equal(401)
                 done();
             })
     })
 })
+
+/**
+ * Test for me query endpoint
+ */
+
+describe('get user information /me', () => {
+    it('sends a request to me query with correct auth token', done => {
+        request.post('/graphql')
+            .send({
+                query: `query{me{username}}`
+            })
+            .set('Authorization', 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTE2LjIwMy42NC4xMzo0MDAwIiwic2NvcGUiOiJzZWxmIiwianRpIjoiMDkwNzRhNmMtMDQxNS00ZTNlLTg4ZDAtOTI4YmI5YTE3YzM0IiwiaWF0IjoxNTg0ODMwOTE2LCJleHAiOjE1ODQ4MzQ1MTZ9.oaKDLXSpjFedo6a84I1xU55PeSnTlvaDWj1tdIzPvQ8')
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err)
+
+                res.body.data.me.should.have.property('username');
+                done();
+            })
+    })
+})
+
+/**
+ * Test for me query endpoint without authentication
+ */
+
+describe('get user information /me', () => {
+    it('sends a request to me query with an incorrect auth token', done => {
+        request.post('/graphql')
+            .send({
+                query: `query{me{username}}`
+            })
+            .set('Authorization', 'Bearer Bad token')
+            .expect(200)
+            .end((err, res) => {
+                if (err) return done(err)
+
+                res.body.errors[0].statusCode.should.equal(401);
+                done();
+            })
+    })
+})
+
