@@ -36,9 +36,8 @@ userController.getUsers().then(users => {
             lng = user.location.lng;
         }
 
-
         // check that the current user's location has not been pinged for yet. If it has, continue to next user
-        if (checkLocationPinged(lat, lng)) {
+        if (! checkLocationPinged(lat, lng)) {
 
             // open weather API request url
             let url = `${weatherConfig.API_URL}forecast?lat=${lat}&lon=${lng}&units=${weatherConfig.UNITS}&appid=${weatherConfig.APP_ID}`;
@@ -46,7 +45,7 @@ userController.getUsers().then(users => {
             // If user location is not known, default to Corfu, which is the "release base" of our software
             // Cron job that runs every 3 hours. Gets a 5 day forecast for every 3 hours for a specific location given by latitude and longtitude
             // 0 */3 * * *
-            cron.schedule('15 * * * * *', async () => {
+            cron.schedule('0 */3 * * *', async () => {
                 /**
                  * Delete data. No prior timestamp data wanted during dev. Might change after alpha
                  * 
@@ -61,7 +60,7 @@ userController.getUsers().then(users => {
                     const success = await prepareAndSave(res);
 
                     // use discord bot. Used during dev for debugging purposes
-                    notifyDiscordChannel(success, lat, lng);
+                    // notifyDiscordChannel(success, lat, lng);
 
                 })
             });
@@ -172,6 +171,7 @@ async function deleteWeatherData() {
 
 function checkLocationPinged(lat, lng) {
     // LOCATIONS is empty because this is the first user. add location to array and return early
+    
     if (LOCATIONS.length == 0) {
         LOCATIONS.push({lat, lng});
         return false;
@@ -179,10 +179,9 @@ function checkLocationPinged(lat, lng) {
 
     // loop over the LOCATIONS array of locations that are already pinged
     LOCATIONS.forEach(location => {
-
+        
         // check that the difference between coordinates is considered significant
         if (Math.abs(location.lat - lat) >= 0.4 || Math.abs(location.lng - lng) >= 0.4) {
-
             // if the difference is significant, push the location to array as a different pinged location and return false
             LOCATIONS.push(location);
             return false;
