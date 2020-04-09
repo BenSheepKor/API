@@ -38,7 +38,6 @@ userController.getUsers().then(users => {
 
         // check that the current user's location has not been pinged for yet. If it has, continue to next user
         if (!checkLocationPinged(lat, lng)) {
-
             // open weather API request url
             let url = `${weatherConfig.API_URL}forecast?lat=${lat}&lon=${lng}&units=${weatherConfig.UNITS}&appid=${weatherConfig.APP_ID}`;
 
@@ -106,7 +105,6 @@ async function prepareAndSave(weatherObj) {
                 location,
                 name,
             });
-
             // successful save to database
             try {
                 const success = await weather.save();
@@ -173,22 +171,15 @@ async function deleteWeatherData() {
 function checkLocationPinged(lat, lng) {
     // LOCATIONS is empty because this is the first user. add location to array and return early
 
-    if (LOCATIONS.length == 0) {
+    if (!LOCATIONS.length) {
         LOCATIONS.push({ lat, lng });
         return false;
     }
-
     // loop over the LOCATIONS array of locations that are already pinged
-    LOCATIONS.forEach(location => {
-
-        // check that the difference between coordinates is considered significant
-        if (Math.abs(location.lat - lat) >= 0.4 || Math.abs(location.lng - lng) >= 0.4) {
-            // if the difference is significant, push the location to array as a different pinged location and return false
-            LOCATIONS.push(location);
-            return false;
-        }
-
-    });
+    if(!LOCATIONS.find(location => location.lat === lat && location.lng === lng)){
+        LOCATIONS.push({ lat, lng });
+        return false;
+    }
 
     return true;
 }
