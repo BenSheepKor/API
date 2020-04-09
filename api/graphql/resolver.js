@@ -1,5 +1,5 @@
 // Use the UserController to get its functions.
-UserController = require('../controllers/userController');
+const UserController = require('../controllers/userController');
 
 // Root resolver for the GraphQL endpoints' callbacks
 const root = {

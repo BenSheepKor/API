@@ -1,15 +1,13 @@
-// Require express to develope the API
+// Require express to develop the API
 var express = require('express'),
-  // Make this application and express insance
+  // Make this application and express instance
   app = express(),
   // Use the port defined in "options" if exists, else on port 4000
   port = process.env.PORT || 4000,
   // Use mongoose to connect and interact with mongodb
   mongoose = require('mongoose'),
   // cors
-  cors = require('cors'),
-  // Register the model
-  User = require('./api/models/userModel');
+  cors = require('cors');
 
 // Cron job to get the weather information
 require('./cron/weather/weather.cron');

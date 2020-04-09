@@ -37,7 +37,7 @@ userController.getUsers().then(users => {
         }
 
         // check that the current user's location has not been pinged for yet. If it has, continue to next user
-        if (! checkLocationPinged(lat, lng)) {
+        if (!checkLocationPinged(lat, lng)) {
 
             // open weather API request url
             let url = `${weatherConfig.API_URL}forecast?lat=${lat}&lon=${lng}&units=${weatherConfig.UNITS}&appid=${weatherConfig.APP_ID}`;
@@ -140,10 +140,11 @@ function notifyDiscordChannel(success, lat, lng) {
 
     const body = { content };
 
-    axios.post('https://discordapp.com/api/webhooks/691348810835820595/TpPlu4t_78e_g4de7r00noLKpBEUbu3fZJS0rP3DzaoXyGYFofGF6qiNb4-_eXc8HsIu', body).then(res => {
+    axios.post('https://discordapp.com/api/webhooks/691348810835820595/TpPlu4t_78e_g4de7r00noLKpBEUbu3fZJS0rP3DzaoXyGYFofGF6qiNb4-_eXc8HsIu', body).then(() => {
         // do nothing
     }).catch(err => {
         // do nothing
+        console.log(err)
     });
 }
 
@@ -171,15 +172,15 @@ async function deleteWeatherData() {
 
 function checkLocationPinged(lat, lng) {
     // LOCATIONS is empty because this is the first user. add location to array and return early
-    
+
     if (LOCATIONS.length == 0) {
-        LOCATIONS.push({lat, lng});
+        LOCATIONS.push({ lat, lng });
         return false;
     }
 
     // loop over the LOCATIONS array of locations that are already pinged
     LOCATIONS.forEach(location => {
-        
+
         // check that the difference between coordinates is considered significant
         if (Math.abs(location.lat - lat) >= 0.4 || Math.abs(location.lng - lng) >= 0.4) {
             // if the difference is significant, push the location to array as a different pinged location and return false

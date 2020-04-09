@@ -41,6 +41,7 @@ exports.getUsers = () => {
         return users;
     }).catch(err => {
         // do nothing for now. We will implement a global catch error function
+        console.log(err)
     });
 }
 
@@ -169,13 +170,12 @@ exports.login = async req => {
     // prepare variables
     let email, username, password = '';
 
-    // Get email if it exists
-    if (req.hasOwnProperty('email')) {
+    if (Object.prototype.hasOwnProperty.call(req, 'email')) {
         email = req.email;
     }
 
     // Get username if it exists
-    if (req.hasOwnProperty('username')) {
+    if (Object.prototype.hasOwnProperty.call(req, 'username')) {
         username = req.username;
     }
 
@@ -243,7 +243,7 @@ exports.login = async req => {
 function validateEmail(email) {
     // taken from https://emailregex.com/
     var emailRegex =
-        /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        /^(([^<>()\\[\]\\.,;:\s@"]+(\.[^<>()\\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
     return emailRegex.test(String(email).toLowerCase());
 }
@@ -317,7 +317,7 @@ function checkUserExists(checkValue, isUsername = false) {
     }
 
     return User.findOne(filterObj).then((user, error) => {
-        if (error) throw new Error(err);
+        if (error) throw new Error(error);
 
         if (user) return user;
 
@@ -341,7 +341,7 @@ function generateToken() {
 }
 
 function storeToken(userId, token) {
-    return User.findOneAndUpdate({ id: userId }, { token }, (err, user) => {
+    return User.findOneAndUpdate({ id: userId }, { token }, (err) => {
         if (err) throw new Error(err);
 
         return true;

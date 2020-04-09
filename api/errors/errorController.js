@@ -22,7 +22,7 @@ const errorKeys = require('./errorKeys');
  */
 exports.handleError = error => {
     // get message and status code from global error keys
-    if (errorKeys.hasOwnProperty(error)) {
+    if (Object.prototype.hasOwnProperty.call(errorKeys, error)) {
         const { message, statusCode } = errorKeys[error];
 
         // return error description
