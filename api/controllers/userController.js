@@ -24,6 +24,9 @@ const axios = require('../../global/axios/axios.config');
  * 
  * It returns all the users of the database
  * 
+ * This endpoint exists only for testing purposes during the development process. It will be removed prior to alpha
+ * @remove
+ * 
  * In order to test this endpoint 
  * 1. Go to localhost:4000/graphql (or use this link with Postman or Insomnia)
  * 2. Send the following as a request object
@@ -68,10 +71,10 @@ exports.me = async (args, req) => {
             if (token) {
                 // check user is authorized
                 if (await isAuthorized(token)) {
-
                     // get user's coordinates from IP address
                     const { lat, lng } = getUserIp(req);
 
+                    console.log(lat,lng)
                     // use token to get user's data
                     return User.findOne({ token }).then((user, error) => {
                         if (error) throw new Error(error);
@@ -133,15 +136,17 @@ exports.create_user = async req => {
             const userDoesExist = await checkUserExists(email);
 
             if (!userDoesExist) {
+                // get user location
+                const { lat, lng } = getUserIp(req);
 
                 // Returns the result of saving the user in the database
-                return registerUser(email, password).then(
+                return registerUser(email, password, lat, lng).then(
                     user => {
                         // format response so GraphQL can pick it up
-                        return { id: user.id, email: user.email };
+                        return user;
                     }
                 ).catch(err => {
-                    console.log(err)
+                    throw new Error(err);
                 })
             }
 
@@ -167,22 +172,8 @@ exports.create_user = async req => {
  * 
  */
 exports.login = async req => {
-    // prepare variables
-    let email, username, password = '';
-
-    if (Object.prototype.hasOwnProperty.call(req, 'email')) {
-        email = req.email;
-    }
-
-    // Get username if it exists
-    if (Object.prototype.hasOwnProperty.call(req, 'username')) {
-        username = req.username;
-    }
-
-    // Get password
-    password = req.password;
-
-
+    // extract variables
+    const { email, username, password } = req;
 
     // Make sure a password is sent
     if (password) {
@@ -290,7 +281,7 @@ async function verifyPassword(checkValue, password, isUsername = false) {
     });
 }
 
-async function isAuthorized(token) {
+function isAuthorized(token) {
     return User.findOne({ token }).then((user, error) => {
         if (error) throw new Error(error)
 
@@ -356,7 +347,7 @@ function storeToken(userId, token) {
  * 
  * @returns {Number} Returns the id of the user. Throws error in case something goes wrong
  */
-async function registerUser(email, password) {
+async function registerUser(email, password, lat, lng) {
 
     const id = await generateId();
 
@@ -366,7 +357,10 @@ async function registerUser(email, password) {
     // hashed password
     password = await bcrypt.hash(password, salt);
 
-    const user = new User({ id, email, password });
+    const location = { lat, lng };
+
+    // does not add lat and lng if they are null
+    const user = new User({ id, email, password, location});
 
     const res = await user.save();
 
@@ -401,9 +395,8 @@ async function generateId() {
  * @param {Object} request 
  */
 function getUserIp(request) {
-    if (request) {
+    if (request && request.headers) {
         let ip = request.headers['x-forwarded-for'] || request.connection.remoteAddress;
-
         // ::ffff: is a subnet prefix for IPv4 addresses that are placed inside an IPv6
         if (ip.indexOf('::ffff:') !== -1) {
             ip = ip.split('::ffff:')[1];
@@ -419,5 +412,10 @@ function getUserIp(request) {
                 }
             }
         )
+    }
+
+    return {
+        lat: null,
+        lng: null,
     }
 }

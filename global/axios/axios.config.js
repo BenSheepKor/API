@@ -1,7 +1,6 @@
 const ax = require('axios');
 
 const axios = ax.create({
-    timeout: 1000,
     headers: { 'content-type' : 'application/json; charset=utf-8' }
 })
 

@@ -1,9 +1,11 @@
-var secureRandom = require('secure-random');
+const config = require('../../config');
 
-var signingKey = secureRandom(256, { type: 'Buffer' }); // Create a highly random byte array of 256 bytes
+const secureRandom = require('secure-random');
 
-var claims = {
-    iss: "http://116.203.64.13:4000",  // The URL of your service
+const signingKey = secureRandom(256, { type: 'Buffer' }); // Create a highly random byte array of 256 bytes
+
+const claims = {
+    iss: config.prod.url,  // The URL of your service
     scope: "self"
 }
 

@@ -7,7 +7,9 @@ var express = require('express'),
   // Use mongoose to connect and interact with mongodb
   mongoose = require('mongoose'),
   // cors
-  cors = require('cors');
+  cors = require('cors'),
+  // Register the model
+  User = require('./api/models/userModel');
 
 // Cron job to get the weather information
 require('./cron/weather/weather.cron');
