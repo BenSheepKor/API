@@ -12,8 +12,9 @@ var schema = buildSchema(`
       name: String,
       email: String!,
       username: String,
-      password: String!
       faculty: String!,
+      lat: String,
+      lng: String,
     },
     type JWT {
       token: String!
