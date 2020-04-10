@@ -198,7 +198,7 @@ describe('get user information /me', () => {
                     return done(err);
                 }
 
-                res.body.data.me.should.have.property('username');
+                res.body.data.should.have.property('username');
                 done();
             });
     });
