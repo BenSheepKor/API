@@ -186,20 +186,34 @@ describe('get user information /me', () => {
         request
             .post('/graphql')
             .send({
-                query: 'query{me{username}}',
+                query:
+                    'mutation{login(email: "test@mocha.com", password: "safepassword123"){token}}',
             })
-            .set(
-                'Authorization',
-                'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTE2LjIwMy42NC4xMzo0MDAwIiwic2NvcGUiOiJzZWxmIiwianRpIjoiMDkwNzRhNmMtMDQxNS00ZTNlLTg4ZDAtOTI4YmI5YTE3YzM0IiwiaWF0IjoxNTg0ODMwOTE2LCJleHAiOjE1ODQ4MzQ1MTZ9.oaKDLXSpjFedo6a84I1xU55PeSnTlvaDWj1tdIzPvQ8'
-            )
             .expect(200)
             .end((err, res) => {
                 if (err) {
                     return done(err);
                 }
 
-                res.body.data.should.have.property('username');
-                done();
+                res.body.data.login.should.have.property('token');
+                // to make sure password does not leak
+                res.body.data.login.should.not.have.property('password');
+
+                request
+                    .post('/graphql')
+                    .send({
+                        query: 'query{me{email}}',
+                    })
+                    .set('Authorization', 'Bearer ' + res.body.data.login.token)
+                    .expect(200)
+                    .end((err, res) => {
+                        if (err) {
+                            return done(err);
+                        }
+
+                        res.body.data.me.should.have.property('email');
+                        done();
+                    });
             });
     });
 });
