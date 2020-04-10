@@ -6,16 +6,18 @@
   "scripts": {
     "start": "nodemon server.js",
     "test": "mocha tests/",
-    "lint": "eslint *.js tests/",
-    "fix": "eslint *.js tests/ --fix"
+    "lint": "eslint api/ cron/ global/ *.js tests/",
+    "fix": "eslint api/ cron/ global/ *.js tests/ --fix"
   },
   "author": "Provatas Dimitris, Pagakis Dimosthenis",
   "license": "ISC",
   "devDependencies": {
     "chai": "^4.2.0",
     "eslint": "^6.8.0",
+    "eslint-plugin-prettier": "^3.1.2",
     "mocha": "^7.1.1",
     "nodemon": "^2.0.2",
+    "prettier": "2.0.4",
     "supertest": "^4.0.2"
   },
   "dependencies": {

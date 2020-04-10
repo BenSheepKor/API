@@ -25,6 +25,5 @@ var schema = buildSchema(`
     }
 `);
 
-
 // export schema
 module.exports = schema;

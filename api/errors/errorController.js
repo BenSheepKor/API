@@ -9,28 +9,27 @@ const errorKeys = require('./errorKeys');
  *     DUPLICATE_EMAIL will lead to an error message of "Email already in use"
  *
  *                                       DISCLAIMER
- * 
+ *
  * In order for this to work when an error is supposed to be thrown, use throw new Error(ERROR_KEY)
  * eg. throw new Error("INVALID_EMAIL")
- *  
+ *
  *                                        DISCLAIMER
- * 
- * 
+ *
+ *
  * All keys can be found in errorKeys.js @see errorKeys.js
- * 
+ *
  * @param error The key of the error
  */
-exports.handleError = error => {
-	// get message and status code from global error keys
-	if (Object.prototype.hasOwnProperty.call(errorKeys, error)) {
-		const { message, statusCode } = errorKeys[error];
+exports.handleError = (error) => {
+    // get message and status code from global error keys
+    if (Object.prototype.hasOwnProperty.call(errorKeys, error)) {
+        const { message, statusCode } = errorKeys[error];
 
-		// return error description
-		return {
-			error,
-			message,
-			statusCode
-		};
-	}
-
+        // return error description
+        return {
+            error,
+            message,
+            statusCode,
+        };
+    }
 };
