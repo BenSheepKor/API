@@ -1,45 +1,33 @@
 version: 2
 jobs:
-  build:
-    working_directory: ~/app
-    # The primary container is an instance of the first image listed. The job's commands run in this container.
-    docker:
-      - image: node:13.12.0-stretch
-    # The secondary container is an instance of the second listed image which is run in a common network where ports exposed on the primary container are available on localhost.
-      - image: mongo:3.6.17-xenial
-    steps:
-      - checkout
-      - setup_remote_docker
-      - run:
-          name: Update npm
-          command: npm install -g npm@latest
-      - restore_cache:
-          key: dependency-cache-{{ checksum "package-lock.json" }}
-      - run:
-          name: Install npm wee
-          command: npm install
-      - save_cache:
-          key: dependency-cache-{{ checksum "package-lock.json" }}
-          paths:
-            - node_modules
-  test:
-    docker:
-      - image: circleci/node:4.8.2-jessie
-      - image: mongo:3.4.4-jessie
-    steps:
-      - checkout
-      - run:
-          name: Lint
-          command: npm run lint
-
-workflows:
-  version: 2
-  build_and_test:
-    jobs:
-      - build
-      - test:
-          requires:
-            - build
-          filters:
-            branches:
-              only: master
+    build:
+        working_directory: ~/app
+        # The primary container is an instance of the first image listed. The job's commands run in this container.
+        docker:
+            - image: node:13.12.0-stretch
+            # The secondary container is an instance of the second listed image which is run in a common network where ports exposed on the primary container are available on localhost.
+            - image: mongo:3.6.17-xenial
+        steps:
+            - checkout
+            - setup_remote_docker
+            - run:
+                  name: Update npm
+                  command: npm install -g npm@latest
+            - restore_cache:
+                  key: dependency-cache-{{ checksum "package-lock.json" }}
+            - run:
+                  name: Install npm wee
+                  command: npm install
+            - save_cache:
+                  key: dependency-cache-{{ checksum "package-lock.json" }}
+                  paths:
+                      - node_modules
+            - run:
+                  name: Lint directory
+                  command: npm run lint
+            - run:
+                  name: Install wait-on
+                  command: npm install -g wait-on
+            - run:
+                  name: Start up and test
+                  command: bin/start_and_test
