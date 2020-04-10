@@ -1,6 +1,6 @@
 version: 2
 jobs:
-    build-and-test:
+    build:
         working_directory: ~/app
         # The primary container is an instance of the first image listed. The job's commands run in this container.
         docker:
