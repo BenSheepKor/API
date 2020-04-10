@@ -80,8 +80,6 @@ exports.me = async (args, req) => {
                             throw new Error(error);
                         }
 
-                        console.log(user)
-
                         // Run the location checks before returning data to user
                         /**
                          * This might make the endpoint a bit slower. discuss with team
