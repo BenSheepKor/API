@@ -1,17 +1,33 @@
-version: 2.1
-orbs:
-  node: circleci/node@1.1.6
+version: 2
 jobs:
-  linter:
-    executor:
-      name: node/default
-    steps:
-      - checkout
-      - node/with-cache:
-          steps:
-            - run: npm install
-            - run: npm run lint
-workflows:
-    linter:
-      jobs:
-        - linter
+    build:
+        working_directory: ~/app
+        # The primary container is an instance of the first image listed. The job's commands run in this container.
+        docker:
+            - image: node:13.12.0-stretch
+            # The secondary container is an instance of the second listed image which is run in a common network where ports exposed on the primary container are available on localhost.
+            - image: mongo:3.6.17-xenial
+        steps:
+            - checkout
+            - setup_remote_docker
+            - run:
+                  name: Update npm
+                  command: npm install -g npm@latest
+            - restore_cache:
+                  key: dependency-cache-{{ checksum "package-lock.json" }}
+            - run:
+                  name: Install npm wee
+                  command: npm install
+            - save_cache:
+                  key: dependency-cache-{{ checksum "package-lock.json" }}
+                  paths:
+                      - node_modules
+            - run:
+                  name: Lint directory
+                  command: npm run lint
+            - run:
+                  name: Install wait-on
+                  command: npm install -g wait-on
+            - run:
+                  name: Start up and test
+                  command: bin/start_and_test

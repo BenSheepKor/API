@@ -67,7 +67,6 @@ exports.me = async (args, req) => {
             // remove the Bearer prefix and store the token
             const token = req.headers.authorization.split('Bearer ')[1];
 
-            console.log('asd');
             // check that token was set
             if (token) {
                 // check user is authorized
