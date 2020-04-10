@@ -42,7 +42,7 @@ describe('register user', () => {
  */
 
 describe('register user', () => {
-    it('tries to register a user with an email that already exists', (done) => {
+    it('attempts to register a user with an email that already exists', (done) => {
         request
             .post('/graphql')
             .send({
@@ -64,7 +64,7 @@ describe('register user', () => {
  * Test script for attempt to register a user with an invalid email address
  */
 describe('register user ', () => {
-    it('tries to register a user with an invalid email', (done) => {
+    it('attempts to register a user with an invalid email', (done) => {
         request
             .post('/graphql')
             .send({
@@ -87,7 +87,7 @@ describe('register user ', () => {
  * Passwords must be at least 8 characters long and contain a number.
  */
 describe('register user ', () => {
-    it('tries to register a user with an invalid password', (done) => {
+    it('attempts to register a user with an invalid password', (done) => {
         request
             .post('/graphql')
             .send({
@@ -135,7 +135,7 @@ describe('login user', () => {
  * Test script for attempt to log in an unregistered user. 404 email not found
  */
 describe('login user', () => {
-    it('tries to login a user that is not registered', (done) => {
+    it('attempts to login a user that is not registered', (done) => {
         request
             .post('/graphql')
             .send({
@@ -158,7 +158,7 @@ describe('login user', () => {
  * Test script for attempt to log in a user with a wrong password. 401 wrong password
  */
 describe('login user', () => {
-    it('tries to login a user with wrong password', (done) => {
+    it('attempts to login a user with wrong password', (done) => {
         request
             .post('/graphql')
             .send({
