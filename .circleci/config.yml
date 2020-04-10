@@ -11,6 +11,8 @@ jobs:
           steps:
             - run: npm install
             - run: npm run lint
+            - run: npm run start
+            - run: npm run test
 workflows:
     linter:
       jobs:

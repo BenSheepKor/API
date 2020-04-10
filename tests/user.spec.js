@@ -1,7 +1,10 @@
 'use-strict';
 
+const chai = require('chai');
 // configuration file that includes env options
 const config = require('../config');
+// eslint-disable-next-line no-unused-vars
+const should = chai.should();
 
 // get the dev api url
 const url = config.dev.url;
