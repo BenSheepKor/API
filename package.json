@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon server.js",
     "test": "mocha tests/",
-    "lint": "eslint api/ cron/ global/"
+    "lint": "eslint api/ cron/ global/",
+    "fix": "eslint api/ cron/ global/ --fix"
   },
   "author": "Provatas Dimitris, Pagakis Dimosthenis",
   "license": "ISC",

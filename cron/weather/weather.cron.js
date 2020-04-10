@@ -21,52 +21,52 @@ let LOCATIONS = [];
 
 // Get all users from the database
 userController.getUsers().then(users => {
-    // empty LOCATIONS array when cron is about to start
-    LOCATIONS = [];
+	// empty LOCATIONS array when cron is about to start
+	LOCATIONS = [];
 
-    // Loop through users
-    users.forEach(user => {
-        // default coordinates for Corfu, our main point of interest for alpha
-        let lat = weatherConfig.DEFAULT_LOCATION.LAT;
-        let lng = weatherConfig.DEFAULT_LOCATION.LNG;
+	// Loop through users
+	users.forEach(user => {
+		// default coordinates for Corfu, our main point of interest for alpha
+		let lat = weatherConfig.DEFAULT_LOCATION.LAT;
+		let lng = weatherConfig.DEFAULT_LOCATION.LNG;
 
-        // if user location is known, change the url coordinates
-        if (user.location.lat && user.location.lng) {
-            lat = user.location.lat;
-            lng = user.location.lng;
-        }
+		// if user location is known, change the url coordinates
+		if (user.location.lat && user.location.lng) {
+			lat = user.location.lat;
+			lng = user.location.lng;
+		}
 
-        // check that the current user's location has not been pinged for yet. If it has, continue to next user
-        if (!checkLocationPinged(lat, lng)) {
-            // open weather API request url
-            let url = `${weatherConfig.API_URL}forecast?lat=${lat}&lon=${lng}&units=${weatherConfig.UNITS}&appid=${weatherConfig.APP_ID}`;
+		// check that the current user's location has not been pinged for yet. If it has, continue to next user
+		if (!checkLocationPinged(lat, lng)) {
+			// open weather API request url
+			const url = `${weatherConfig.API_URL}forecast?lat=${lat}&lon=${lng}&units=${weatherConfig.UNITS}&appid=${weatherConfig.APP_ID}`;
 
-            // If user location is not known, default to Corfu, which is the "release base" of our software
-            // Cron job that runs every 3 hours. Gets a 5 day forecast for every 3 hours for a specific location given by latitude and longtitude
-            // 0 */3 * * *
-            cron.schedule('0 */3 * * *', async () => {
-                /**
+			// If user location is not known, default to Corfu, which is the "release base" of our software
+			// Cron job that runs every 3 hours. Gets a 5 day forecast for every 3 hours for a specific location given by latitude and longtitude
+			// 0 */3 * * *
+			cron.schedule('0 */3 * * *', async () => {
+				/**
                  * Delete data. No prior timestamp data wanted during dev. Might change after alpha
                  * 
                  * @see deleteWeatherData
                  */
 
-                await deleteWeatherData();
+				await deleteWeatherData();
 
-                // shot the request to the open weather API
-                axios.get(url).then(async res => {
-                    // save data
-                    const success = await prepareAndSave(res);
+				// shot the request to the open weather API
+				axios.get(url).then(async res => {
+					// save data
+					const success = await prepareAndSave(res);
 
-                    // use discord bot. Used during dev for debugging purposes
-                    notifyDiscordChannel(success, lat, lng);
+					// use discord bot. Used during dev for debugging purposes
+					notifyDiscordChannel(success, lat, lng);
 
-                })
-            });
-        }
+				});
+			});
+		}
 
-    })
-})
+	});
+});
 
 /**
  * Function that receives the open weather api response object and prepares the object to be used by our weather model
@@ -79,47 +79,47 @@ userController.getUsers().then(users => {
  * @returns {Boolean} Returns true if all weather objects are saved else throws error 
  */
 async function prepareAndSave(weatherObj) {
-    const weatherList = weatherObj.list;
+	const weatherList = weatherObj.list;
 
-    // make sure the list has elements
-    if (weatherList.length > 0) {
-        // Get data from the open weather API response
+	// make sure the list has elements
+	if (weatherList.length > 0) {
+		// Get data from the open weather API response
 
-        const name = weatherObj.city.name || '';
+		const name = weatherObj.city.name || '';
 
-        const location = {
-            lat: weatherObj.city.coord.lat || 0,
-            lng: weatherObj.city.coord.lon || 0,
-        };
+		const location = {
+			lat: weatherObj.city.coord.lat || 0,
+			lng: weatherObj.city.coord.lon || 0,
+		};
 
-        // Loop through the weather reports. there are 40 reports. 8 reports per day for 5 days
-        for (let i = 0; i < COUNT; i++) {
-            // get the current report
-            const report = weatherList[i];
+		// Loop through the weather reports. there are 40 reports. 8 reports per day for 5 days
+		for (let i = 0; i < COUNT; i++) {
+			// get the current report
+			const report = weatherList[i];
 
-            // create the weather object
-            const weather = new Weather({
-                timestamp: report.dt || 0,
-                temp: report.main.temp || '',
-                description: report.weather[0].description || '',
-                location,
-                name,
-            });
-            // successful save to database
-            try {
-                const success = await weather.save();
+			// create the weather object
+			const weather = new Weather({
+				timestamp: report.dt || 0,
+				temp: report.main.temp || '',
+				description: report.weather[0].description || '',
+				location,
+				name,
+			});
+			// successful save to database
+			try {
+				const success = await weather.save();
 
-                // throw error even if one object is not stored
-                if (!success) throw new Error();
+				// throw error even if one object is not stored
+				if (!success) {throw new Error();}
 
-            } catch (error) {
-                console.log(error)
-            }
-        }
-    }
+			} catch (error) {
+				console.log(error);
+			}
+		}
+	}
 
-    // if all data is store return true
-    return true;
+	// if all data is store return true
+	return true;
 }
 
 /**
@@ -128,22 +128,22 @@ async function prepareAndSave(weatherObj) {
  * @param {Boolean} success Determined by if all weather data are succesfully stored in the dabase 
  */
 function notifyDiscordChannel(success, lat, lng) {
-    let content = 'Weather data saved';
+	let content = 'Weather data saved';
 
-    if (!success) {
-        content = 'Something went wrong';
-    }
+	if (!success) {
+		content = 'Something went wrong';
+	}
 
-    content += ' | Cron executed at ' + new Date() + '\n Coordinates: \n Lat: ' + lat + '\n Lng: ' + lng + '\n =================================';
+	content += ' | Cron executed at ' + new Date() + '\n Coordinates: \n Lat: ' + lat + '\n Lng: ' + lng + '\n =================================';
 
-    const body = { content };
+	const body = { content };
 
-    axios.post('https://discordapp.com/api/webhooks/691348810835820595/TpPlu4t_78e_g4de7r00noLKpBEUbu3fZJS0rP3DzaoXyGYFofGF6qiNb4-_eXc8HsIu', body).then(() => {
-        // do nothing
-    }).catch(err => {
-        // do nothing
-        console.log(err)
-    });
+	axios.post('https://discordapp.com/api/webhooks/691348810835820595/TpPlu4t_78e_g4de7r00noLKpBEUbu3fZJS0rP3DzaoXyGYFofGF6qiNb4-_eXc8HsIu', body).then(() => {
+		// do nothing
+	}).catch(err => {
+		// do nothing
+		console.log(err);
+	});
 }
 
 /**
@@ -154,11 +154,11 @@ function notifyDiscordChannel(success, lat, lng) {
  * @returns {Boolean} Returns true if deletion was successful
  */
 async function deleteWeatherData() {
-    return Weather.deleteMany({}).then((res, err) => {
-        if (err) throw new Error(err);
+	return Weather.deleteMany({}).then((res, err) => {
+		if (err) {throw new Error(err);}
 
-        return res;
-    })
+		return res;
+	});
 }
 
 /**
@@ -169,17 +169,17 @@ async function deleteWeatherData() {
  */
 
 function checkLocationPinged(lat, lng) {
-    // LOCATIONS is empty because this is the first user. add location to array and return early
+	// LOCATIONS is empty because this is the first user. add location to array and return early
 
-    if (!LOCATIONS.length) {
-        LOCATIONS.push({ lat, lng });
-        return false;
-    }
-    // loop over the LOCATIONS array of locations that are already pinged
-    if(!LOCATIONS.find(location => location.lat === lat && location.lng === lng)){
-        LOCATIONS.push({ lat, lng });
-        return false;
-    }
+	if (!LOCATIONS.length) {
+		LOCATIONS.push({ lat, lng });
+		return false;
+	}
+	// loop over the LOCATIONS array of locations that are already pinged
+	if(!LOCATIONS.find(location => location.lat === lat && location.lng === lng)){
+		LOCATIONS.push({ lat, lng });
+		return false;
+	}
 
-    return true;
+	return true;
 }
