@@ -19,7 +19,7 @@ const jwtConfigs = require('../jwt/config.dev');
 const axios = require('../../global/axios/axios.config');
 
 const { DEFAULT_LOCATION } = require('../../cron/weather/weather.config');
-const { checkForToken } = require('../../global/functions/functions');
+const { checkForToken } = require('../../global/functions');
 
 /**
  * Callback function for GraphQL query "users"

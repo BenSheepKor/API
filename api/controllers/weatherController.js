@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 
 // Get the User model
 const Weather = mongoose.model('Weather');
-const { checkForToken } = require('../../global/functions/functions');
+const { checkForToken } = require('../../global/functions');
 
 exports.getWeatherByCoordinates = (args, req) => {
     const token = checkForToken(req);
