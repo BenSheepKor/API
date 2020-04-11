@@ -30,8 +30,8 @@ var schema = buildSchema(`
       timestamp: Int
     }
     type Mutation {
-      register(email: String!, password: String!): User!,
-      login(email: String, username: String, password: String!): JWT!
+      register(email: String!, password: String!): User,
+      login(email: String, username: String, password: String!): JWT
     }
 `);
 
