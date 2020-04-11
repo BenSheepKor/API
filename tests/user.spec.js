@@ -11,8 +11,6 @@ const url = config.dev.url;
 // testing framework for HTTP requests
 const request = require('supertest')(url);
 
-const errors = require('../api/errors/errorKeys');
-
 describe('register user', () => {
     it('registers a user using a unique email and a password', (done) => {
         request
