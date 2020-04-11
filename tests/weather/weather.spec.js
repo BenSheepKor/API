@@ -84,7 +84,7 @@ describe('get weather information', () => {
                 if (err) {
                     return done(err);
                 }
-                res.body.errors[0].statusCode.should.equal(401);
+                res.body.errors[0].status.should.equal(401);
                 done();
             });
     });

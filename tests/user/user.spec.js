@@ -12,12 +12,18 @@ const url = config.dev.url;
 const request = require('supertest')(url);
 
 const { logInWithValidCredentials } = require('../functions');
+const User = require('../../api/models/userModel');
 
 /**
  * Test script for registering a new user to the platform
  */
 
 describe('register user', () => {
+    before((done) => {
+        User.findOneAndDelete({ email: 'test@mocha.com' }).then(() => {
+            done();
+        });
+    });
     it('registers a user using a unique email and a password', (done) => {
         const query = `mutation {
             register(email: "test@mocha.com", password: "safepassword123") {
@@ -59,12 +65,12 @@ describe('register user', () => {
         request
             .post('/graphql')
             .send({ query })
-            .expect(500)
+            .expect(200)
             .end((err, res) => {
                 if (err) {
                     return done(err);
                 }
-                res.body.errors[0].statusCode.should.equal(409);
+                res.body.errors[0].status.should.equal(409);
                 done();
             });
     });
@@ -85,12 +91,12 @@ describe('register user ', () => {
         request
             .post('/graphql')
             .send({ query })
-            .expect(500)
+            .expect(200)
             .end((err, res) => {
                 if (err) {
                     return done(err);
                 }
-                res.body.errors[0].statusCode.should.equal(422);
+                res.body.errors[0].status.should.equal(422);
                 done();
             });
     });
@@ -112,12 +118,12 @@ describe('register user ', () => {
         request
             .post('/graphql')
             .send({ query })
-            .expect(500)
+            .expect(200)
             .end((err, res) => {
                 if (err) {
                     return done(err);
                 }
-                res.body.errors[0].statusCode.should.equal(422);
+                res.body.errors[0].status.should.equal(422);
                 done();
             });
     });
@@ -158,13 +164,13 @@ describe('login user', () => {
         request
             .post('/graphql')
             .send({ query })
-            .expect(500)
+            .expect(200)
             .end((err, res) => {
                 if (err) {
                     return done(err);
                 }
 
-                res.body.errors[0].statusCode.should.equal(404);
+                res.body.errors[0].status.should.equal(404);
                 done();
             });
     });
@@ -184,13 +190,13 @@ describe('login user', () => {
         request
             .post('/graphql')
             .send({ query })
-            .expect(500)
+            .expect(200)
             .end((err, res) => {
                 if (err) {
                     return done(err);
                 }
 
-                res.body.errors[0].statusCode.should.equal(401);
+                res.body.errors[0].status.should.equal(401);
                 done();
             });
     });
@@ -249,7 +255,7 @@ describe('get user information /me', () => {
                     return done(err);
                 }
 
-                res.body.errors[0].statusCode.should.equal(401);
+                res.body.errors[0].status.should.equal(401);
                 done();
             });
     });
