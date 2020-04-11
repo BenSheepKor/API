@@ -3,14 +3,17 @@
 // Get mongoose to connect with the mongodb database
 const mongoose = require('mongoose');
 
-// Get the User model
+// Get models
 const Weather = mongoose.model('Weather');
-const { checkForToken } = require('../../global/functions');
 
-exports.getWeatherByCoordinates = (args, req) => {
+const { checkForToken, isAuthorized } = require('../../global/functions');
+
+exports.getWeatherByCoordinates = async (args, req) => {
+    // retrieve the token
     const token = checkForToken(req);
 
-    if (token) {
+    // make sure token matches a registered user;
+    if (await isAuthorized(token)) {
         // extract coordinates
         const { lat, lng } = args;
 

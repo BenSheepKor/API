@@ -19,7 +19,7 @@ const jwtConfigs = require('../jwt/config.dev');
 const axios = require('../../global/axios/axios.config');
 
 const { DEFAULT_LOCATION } = require('../../cron/weather/weather.config');
-const { checkForToken } = require('../../global/functions');
+const { checkForToken, isAuthorized } = require('../../global/functions');
 
 /**
  * Callback function for GraphQL query "users"
@@ -279,20 +279,6 @@ async function verifyPassword(checkValue, password, isUsername = false) {
         }
 
         return doesMatch;
-    });
-}
-
-function isAuthorized(token) {
-    return User.findOne({ token }).then((user, error) => {
-        if (error) {
-            throw new Error(error);
-        }
-
-        if (user) {
-            return user.token === token;
-        }
-
-        return false;
     });
 }
 
