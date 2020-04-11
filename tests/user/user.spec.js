@@ -11,6 +11,8 @@ const url = config.dev.url;
 // testing framework for HTTP requests
 const request = require('supertest')(url);
 
+const { logInWithValidCredentials } = require('../functions');
+
 /**
  * Test script for registering a new user to the platform
  */
@@ -252,13 +254,3 @@ describe('get user information /me', () => {
             });
     });
 });
-
-function logInWithValidCredentials() {
-    const query = `mutation {
-        login(email: "test@mocha.com", password: "safepassword123") {
-            token
-        }
-    }`;
-
-    return request.post('/graphql').send({ query });
-}

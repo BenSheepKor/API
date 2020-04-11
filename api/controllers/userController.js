@@ -18,6 +18,8 @@ const jwtConfigs = require('../jwt/config.dev');
 // get axios to use iplocate
 const axios = require('../../global/axios/axios.config');
 
+const { DEFAULT_LOCATION } = require('../../cron/weather/weather.config');
+
 /**
  * Callback function for GraphQL query "users"
  *
@@ -72,7 +74,7 @@ exports.me = async (args, req) => {
                 // check user is authorized
                 if (await isAuthorized(token)) {
                     // get user's coordinates from IP address
-                    const { lat, lng } = getUserIp(req);
+                    const { lat, lng } = getUserLocationByIp(req);
 
                     // use token to get user's data
                     return User.findOne({ token }).then((user, error) => {
@@ -144,7 +146,7 @@ exports.createUser = async (req) => {
 
             if (!userDoesExist) {
                 // get user location
-                const { lat, lng } = getUserIp(req);
+                const { lat, lng } = getUserLocationByIp(req);
 
                 // Returns the result of saving the user in the database
                 return registerUser(email, password, lat, lng)
@@ -406,7 +408,7 @@ async function generateId() {
  * Function that uses the request object to find the IP of the user. The IP run against an IP->Location service so we can locate the user
  * @param {Object} request
  */
-function getUserIp(request) {
+function getUserLocationByIp(request) {
     if (request && request.headers) {
         let ip =
             request.headers['x-forwarded-for'] ||
@@ -429,7 +431,7 @@ function getUserIp(request) {
     }
 
     return {
-        lat: null,
-        lng: null,
+        lat: DEFAULT_LOCATION.LAT,
+        lng: DEFAULT_LOCATION.LNG,
     };
 }
