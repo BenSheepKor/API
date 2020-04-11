@@ -11,10 +11,6 @@ const url = config.dev.url;
 // testing framework for HTTP requests
 const request = require('supertest')(url);
 
-/**
- * Test script for registering a new user to the platform
- */
-
 describe('register user', () => {
     it('registers a user using a unique email and a password', (done) => {
         request
@@ -35,13 +31,7 @@ describe('register user', () => {
                 done();
             });
     });
-});
 
-/**
- * Test script for attempt to register a user that already exists on the platform
- */
-
-describe('register user', () => {
     it('tries to register a user with an email that already exists', (done) => {
         request
             .post('/graphql')
@@ -54,16 +44,12 @@ describe('register user', () => {
                 if (err) {
                     return done(err);
                 }
+
                 res.body.errors[0].statusCode.should.equal(409);
                 done();
             });
     });
-});
 
-/**
- * Test script for attempt to register a user with an invalid email address
- */
-describe('register user ', () => {
     it('tries to register a user with an invalid email', (done) => {
         request
             .post('/graphql')
@@ -80,13 +66,7 @@ describe('register user ', () => {
                 done();
             });
     });
-});
-
-/**
- * Test scirpt for attempt to register a user with a password that is not strong enough.
- * Passwords must be at least 8 characters long and contain a number.
- */
-describe('register user ', () => {
+    // Passwords must be at least 8 characters long and contain a number.
     it('tries to register a user with an invalid password', (done) => {
         request
             .post('/graphql')
@@ -105,18 +85,9 @@ describe('register user ', () => {
     });
 });
 
-/**
- * Test script for user log in. Given an email and a password user is successfully logged in and the client gets the token
- */
-
 describe('login user', () => {
     it('successfully logs in a user with his email and password', (done) => {
-        request
-            .post('/graphql')
-            .send({
-                query:
-                    'mutation{login(email: "test@mocha.com", password: "safepassword123"){token}}',
-            })
+        logInWithValidCredentials()
             .expect(200)
             .end((err, res) => {
                 if (err) {
@@ -129,12 +100,7 @@ describe('login user', () => {
                 done();
             });
     });
-});
 
-/**
- * Test script for attempt to log in an unregistered user. 404 email not found
- */
-describe('login user', () => {
     it('tries to login a user that is not registered', (done) => {
         request
             .post('/graphql')
@@ -152,12 +118,7 @@ describe('login user', () => {
                 done();
             });
     });
-});
 
-/**
- * Test script for attempt to log in a user with a wrong password. 401 wrong password
- */
-describe('login user', () => {
     it('tries to login a user with wrong password', (done) => {
         request
             .post('/graphql')
@@ -177,52 +138,27 @@ describe('login user', () => {
     });
 });
 
-/**
- * Test for me query endpoint
- */
-
 describe('get user information /me', () => {
     it('sends a request to me query with correct auth token', (done) => {
-        request
-            .post('/graphql')
-            .send({
-                query:
-                    'mutation{login(email: "test@mocha.com", password: "safepassword123"){token}}',
-            })
-            .expect(200)
-            .end((err, res) => {
-                if (err) {
-                    return done(err);
-                }
+        logInWithValidCredentials().end((err, res) => {
+            request
+                .post('/graphql')
+                .send({
+                    query: 'query{me{email}}',
+                })
+                .set('Authorization', 'Bearer ' + res.body.data.login.token)
+                .expect(200)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
 
-                res.body.data.login.should.have.property('token');
-                // to make sure password does not leak
-                res.body.data.login.should.not.have.property('password');
-
-                request
-                    .post('/graphql')
-                    .send({
-                        query: 'query{me{email}}',
-                    })
-                    .set('Authorization', 'Bearer ' + res.body.data.login.token)
-                    .expect(200)
-                    .end((err, res) => {
-                        if (err) {
-                            return done(err);
-                        }
-
-                        res.body.data.me.should.have.property('email');
-                        done();
-                    });
-            });
+                    res.body.data.me.should.have.property('email');
+                    done();
+                });
+        });
     });
-});
 
-/**
- * Test for me query endpoint without authentication
- */
-
-describe('get user information /me', () => {
     it('sends a request to me query with an incorrect auth token', (done) => {
         request
             .post('/graphql')
@@ -241,3 +177,10 @@ describe('get user information /me', () => {
             });
     });
 });
+
+function logInWithValidCredentials() {
+    return request.post('/graphql').send({
+        query:
+            'mutation{login(email: "test@mocha.com", password: "safepassword123"){token}}',
+    });
+}
