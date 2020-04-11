@@ -22,7 +22,7 @@ const Weather = require('../../api/models/weatherModel');
 
 const { logInWithValidCredentials } = require('../functions');
 
-describe('get weather information', () => {
+describe('get weather data', () => {
     before((done) => {
         Weather.deleteMany({}, (err) => {
             if (err) {
@@ -37,7 +37,7 @@ describe('get weather information', () => {
         });
     });
 
-    it('returns weather information given specific coordinates w/ auth', (done) => {
+    it('returns weather data given specific coordinates w/ auth', (done) => {
         logInWithValidCredentials().end((err, res) => {
             if (err) {
                 throw new Error(err);
@@ -68,7 +68,7 @@ describe('get weather information', () => {
         });
     });
 
-    it('attempts to retrieve weather information without auth', (done) => {
+    it('attempts to retrieve weather data without auth', (done) => {
         const query = `query {
             weather(lat: ${DEFAULT_LOCATION.LAT}, lng: ${DEFAULT_LOCATION.LNG}) {
                 temp,
@@ -87,6 +87,37 @@ describe('get weather information', () => {
                 res.body.errors[0].status.should.equal(401);
                 done();
             });
+    });
+
+    it('retrieves weather data given coordinates are not stored in the database', (done) => {
+        logInWithValidCredentials().end((err, res) => {
+            if (err) {
+                throw new Error(err);
+            }
+
+            const token = res.body.data.login.token;
+
+            const query = `query {
+                weather(lat: 4.20, lng: 8.24) {
+                    temp,
+                    description
+                }
+            }`;
+            request
+                .post('/graphql')
+                .send({ query })
+                .set('Authorization', 'Bearer ' + token)
+                .expect(200)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    res.body.data.weather.should.have.property('temp');
+                    res.body.data.weather.should.have.property('description');
+                    done();
+                });
+        });
     });
 });
 

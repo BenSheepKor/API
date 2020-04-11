@@ -10,9 +10,11 @@ var weatherSchema = new Schema({
     },
     name: {
         type: String,
+    },
+    description: {
+        type: String,
         required: true,
     },
-    description: String,
     city: String,
     location: {
         lng: {
