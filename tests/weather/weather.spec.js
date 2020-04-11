@@ -24,15 +24,20 @@ const { logInWithValidCredentials } = require('../functions');
 
 describe('get weather information', () => {
     before((done) => {
-        const url = `${API_URL}forecast?lat=${DEFAULT_LOCATION.LAT}&lon=${DEFAULT_LOCATION.LNG}&units=${UNITS}&appid=${APP_ID}`;
+        Weather.deleteMany({}, (err) => {
+            if (err) {
+                throw new Error(err);
+            }
+            const url = `${API_URL}forecast?lat=${DEFAULT_LOCATION.LAT}&lon=${DEFAULT_LOCATION.LNG}&units=${UNITS}&appid=${APP_ID}`;
 
-        axios.get(url).then((res) => {
-            saveWeatherData(res.data);
-            done();
+            axios.get(url).then((res) => {
+                saveWeatherData(res.data);
+                done();
+            });
         });
     });
 
-    it('returns weather information given specific coordinates w/auth', (done) => {
+    it('returns weather information given specific coordinates w/ auth', (done) => {
         logInWithValidCredentials().end((err, res) => {
             if (err) {
                 throw new Error(err);
@@ -46,7 +51,6 @@ describe('get weather information', () => {
                     description
                 }
             }`;
-
             request
                 .post('/graphql')
                 .send({ query })
@@ -62,6 +66,27 @@ describe('get weather information', () => {
                     done();
                 });
         });
+    });
+
+    it('attempts to retrieve weather information without auth', (done) => {
+        const query = `query {
+            weather(lat: ${DEFAULT_LOCATION.LAT}, lng: ${DEFAULT_LOCATION.LNG}) {
+                temp,
+                description
+            }
+        }`;
+
+        request
+            .post('/graphql')
+            .send({ query })
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+                res.body.errors[0].statusCode.should.equal(401);
+                done();
+            });
     });
 });
 
