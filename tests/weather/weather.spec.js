@@ -20,6 +20,8 @@ const {
 
 const Weather = require('../../api/models/weatherModel');
 
+const { logInWithValidCredentials } = require('../functions');
+
 describe('get weather information', () => {
     before((done) => {
         const url = `${API_URL}forecast?lat=${DEFAULT_LOCATION.LAT}&lon=${DEFAULT_LOCATION.LNG}&units=${UNITS}&appid=${APP_ID}`;
@@ -30,27 +32,36 @@ describe('get weather information', () => {
         });
     });
 
-    it('returns weather information given specific coordinates', (done) => {
-        const query = `query {
-            weather(lat: ${DEFAULT_LOCATION.LAT}, lng: ${DEFAULT_LOCATION.LNG}) {
-                temp,
-                description
+    it('returns weather information given specific coordinates w/auth', (done) => {
+        logInWithValidCredentials().end((err, res) => {
+            if (err) {
+                throw new Error(err);
             }
-        }`;
 
-        request
-            .post('/graphql')
-            .send({ query })
-            .expect(200)
-            .end((err, res) => {
-                if (err) {
-                    return done(err);
+            const token = res.body.data.login.token;
+
+            const query = `query {
+                weather(lat: ${DEFAULT_LOCATION.LAT}, lng: ${DEFAULT_LOCATION.LNG}) {
+                    temp,
+                    description
                 }
+            }`;
 
-                res.body.data.weather.should.have.property('temp');
-                res.body.data.weather.should.have.property('description');
-                done();
-            });
+            request
+                .post('/graphql')
+                .send({ query })
+                .set('Authorization', 'Bearer ' + token)
+                .expect(200)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    res.body.data.weather.should.have.property('temp');
+                    res.body.data.weather.should.have.property('description');
+                    done();
+                });
+        });
     });
 });
 
