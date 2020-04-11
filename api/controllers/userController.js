@@ -19,6 +19,7 @@ const jwtConfigs = require('../jwt/config.dev');
 const axios = require('../../global/axios/axios.config');
 
 const { DEFAULT_LOCATION } = require('../../cron/weather/weather.config');
+const { checkForToken } = require('../../global/functions/functions');
 
 /**
  * Callback function for GraphQL query "users"
@@ -62,67 +63,60 @@ exports.getUsers = () => {
  * If the difference is significant, the saved location gets updated
  */
 exports.me = async (args, req) => {
-    // Check that an authorization was sent
-    if (req.headers.authorization) {
-        // Check that it as indeed a Bearer token
-        if (req.headers.authorization.indexOf('Bearer ') !== -1) {
-            // remove the Bearer prefix and store the token
-            const token = req.headers.authorization.split('Bearer ')[1];
+    const token = checkForToken(req);
 
-            // check that token was set
-            if (token) {
-                // check user is authorized
-                if (await isAuthorized(token)) {
-                    // get user's coordinates from IP address
-                    const { lat, lng } = getUserLocationByIp(req);
+    // check that token was set
+    if (token) {
+        // check user is authorized
+        if (await isAuthorized(token)) {
+            // get user's coordinates from IP address
+            const { lat, lng } = getUserLocationByIp(req);
 
-                    // use token to get user's data
-                    return User.findOne({ token }).then((user, error) => {
-                        if (error) {
-                            throw new Error(error);
-                        }
-
-                        // Run the location checks before returning data to user
-                        /**
-                         * This might make the endpoint a bit slower. discuss with team
-                         */
-                        // check that coordinates were received by the ip lookup
-                        if (lat && lng) {
-                            // if user location is not already known, simply store the coordinates without any further checking
-                            if (!user.lat && !user.lng) {
-                                User.findByIdAndUpdate(user.id, {
-                                    'location.lat': lat,
-                                    'location.lng': lng,
-                                }).then((user, error) => {
-                                    if (error) {
-                                        throw new Error();
-                                    }
-                                });
-                            }
-
-                            // experimenting. A difference of 0.04 is considered significant
-                            if (
-                                Math.abs(user.lat - lat) >= 0.04 ||
-                                Math.abs(user.lng - lng) >= 0.04
-                            ) {
-                                User.findByIdAndUpdate(user.id, {
-                                    'location.lat': lat,
-                                    'location.lng': lng,
-                                }).then((user, error) => {
-                                    if (error) {
-                                        throw new Error();
-                                    }
-                                });
-                            }
-                        }
-                        return user;
-                    });
+            // use token to get user's data
+            return User.findOne({ token }).then((user, error) => {
+                if (error) {
+                    throw new Error(error);
                 }
-            }
 
-            throw new Error('NO_AUTH');
+                // Run the location checks before returning data to user
+                /**
+                 * This might make the endpoint a bit slower. discuss with team
+                 */
+                // check that coordinates were received by the ip lookup
+                if (lat && lng) {
+                    // if user location is not already known, simply store the coordinates without any further checking
+                    if (!user.lat && !user.lng) {
+                        User.findByIdAndUpdate(user.id, {
+                            'location.lat': lat,
+                            'location.lng': lng,
+                        }).then((user, error) => {
+                            if (error) {
+                                throw new Error();
+                            }
+                        });
+                    }
+
+                    // experimenting. A difference of 0.04 is considered significant
+                    if (
+                        Math.abs(user.lat - lat) >= 0.04 ||
+                        Math.abs(user.lng - lng) >= 0.04
+                    ) {
+                        User.findByIdAndUpdate(user.id, {
+                            'location.lat': lat,
+                            'location.lng': lng,
+                        }).then((user, error) => {
+                            if (error) {
+                                throw new Error();
+                            }
+                        });
+                    }
+                }
+                return user;
+            });
         }
     }
+
+    throw new Error('NO_AUTH');
 };
 
 /**
