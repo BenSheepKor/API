@@ -112,7 +112,7 @@ async function prepareAndSave(weatherObj) {
                     throw new Error();
                 }
             } catch (error) {
-                throw new Error(error)
+                throw new Error(error);
             }
         }
     }
