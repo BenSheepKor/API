@@ -2,7 +2,7 @@
 
 const chai = require('chai');
 // configuration file that includes env options
-const config = require('../config');
+const config = require('../../config');
 // eslint-disable-next-line no-unused-vars
 const should = chai.should();
 
@@ -17,12 +17,16 @@ const request = require('supertest')(url);
 
 describe('register user', () => {
     it('registers a user using a unique email and a password', (done) => {
+        const query = `mutation {
+            register(email: "test@mocha.com", password: "safepassword123") {
+                id,
+                email
+            }
+        }`;
+
         request
             .post('/graphql')
-            .send({
-                query:
-                    'mutation{register(email: "test@mocha.com", password: "safepassword123"){id,email}}',
-            })
+            .send({ query })
             .expect(200)
             .end((err, res) => {
                 if (err) {
@@ -43,12 +47,16 @@ describe('register user', () => {
 
 describe('register user', () => {
     it('attempts to register a user with an email that already exists', (done) => {
+        const query = `mutation {
+            register(email: "test@mocha.com", password: "safepassword123") {
+                id,
+                email
+            }
+        }`;
+
         request
             .post('/graphql')
-            .send({
-                query:
-                    'mutation{register(email: "test@mocha.com", password: "safepassword123"){id,email}}',
-            })
+            .send({ query })
             .expect(500)
             .end((err, res) => {
                 if (err) {
@@ -65,12 +73,16 @@ describe('register user', () => {
  */
 describe('register user ', () => {
     it('attempts to register a user with an invalid email', (done) => {
+        const query = `mutation {
+            register(email: "invalidemail.com", password: "safepassword123") {
+                id,
+                email
+            }
+        }`;
+
         request
             .post('/graphql')
-            .send({
-                query:
-                    'mutation{register(email: "invalidemail.com", password: "safepassword123"){id,email}}',
-            })
+            .send({ query })
             .expect(500)
             .end((err, res) => {
                 if (err) {
@@ -88,12 +100,16 @@ describe('register user ', () => {
  */
 describe('register user ', () => {
     it('attempts to register a user with an invalid password', (done) => {
+        const query = `mutation {
+            register(email: "invalid@email.com", password: "badpass") {
+                id,
+                email
+            }
+        }`;
+
         request
             .post('/graphql')
-            .send({
-                query:
-                    'mutation{register(email: "invalid@email.com", password: "badpass"){id,email}}',
-            })
+            .send({ query })
             .expect(500)
             .end((err, res) => {
                 if (err) {
@@ -111,12 +127,7 @@ describe('register user ', () => {
 
 describe('login user', () => {
     it('successfully logs in a user with his email and password', (done) => {
-        request
-            .post('/graphql')
-            .send({
-                query:
-                    'mutation{login(email: "test@mocha.com", password: "safepassword123"){token}}',
-            })
+        logInWithValidCredentials()
             .expect(200)
             .end((err, res) => {
                 if (err) {
@@ -136,12 +147,15 @@ describe('login user', () => {
  */
 describe('login user', () => {
     it('attempts to login a user that is not registered', (done) => {
+        const query = `mutation {
+            login(email: "nonexisten@email.com", password: "safepassword123") {
+                token
+            }
+        }`;
+
         request
             .post('/graphql')
-            .send({
-                query:
-                    'mutation{login(email: "nonexisten@email.com", password: "safepassword123"){token}}',
-            })
+            .send({ query })
             .expect(500)
             .end((err, res) => {
                 if (err) {
@@ -159,12 +173,15 @@ describe('login user', () => {
  */
 describe('login user', () => {
     it('attempts to login a user with wrong password', (done) => {
+        const query = `mutation {
+            login(email: "test@mocha.com", password: "wrongpassword123") {
+                token
+            }
+        }`;
+
         request
             .post('/graphql')
-            .send({
-                query:
-                    'mutation{login(email: "test@mocha.com", password: "wrongpassword123"){token}}',
-            })
+            .send({ query })
             .expect(500)
             .end((err, res) => {
                 if (err) {
@@ -183,38 +200,32 @@ describe('login user', () => {
 
 describe('get user information /me', () => {
     it('sends a request to me query with correct auth token', (done) => {
-        request
-            .post('/graphql')
-            .send({
-                query:
-                    'mutation{login(email: "test@mocha.com", password: "safepassword123"){token}}',
-            })
-            .expect(200)
-            .end((err, res) => {
-                if (err) {
-                    return done(err);
-                }
+        const query = `query {
+            me {
+                email,
+            }
+        }`;
 
-                res.body.data.login.should.have.property('token');
-                // to make sure password does not leak
-                res.body.data.login.should.not.have.property('password');
+        logInWithValidCredentials().end((err, res) => {
+            if (err) {
+                return done(err);
+            }
+            const token = res.body.data.login.token;
 
-                request
-                    .post('/graphql')
-                    .send({
-                        query: 'query{me{email}}',
-                    })
-                    .set('Authorization', 'Bearer ' + res.body.data.login.token)
-                    .expect(200)
-                    .end((err, res) => {
-                        if (err) {
-                            return done(err);
-                        }
+            request
+                .post('/graphql')
+                .send({ query })
+                .set('Authorization', 'Bearer ' + token)
+                .expect(200)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
 
-                        res.body.data.me.should.have.property('email');
-                        done();
-                    });
-            });
+                    res.body.data.me.should.have.property('email');
+                    done();
+                });
+        });
     });
 });
 
@@ -241,3 +252,13 @@ describe('get user information /me', () => {
             });
     });
 });
+
+function logInWithValidCredentials() {
+    const query = `mutation {
+        login(email: "test@mocha.com", password: "safepassword123") {
+            token
+        }
+    }`;
+
+    return request.post('/graphql').send({ query });
+}

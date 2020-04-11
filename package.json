@@ -5,9 +5,9 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon server.js",
-    "test": "mocha tests/",
-    "lint": "eslint api/ cron/ global/ *.js tests/",
-    "fix": "eslint api/ cron/ global/ *.js tests/ --fix"
+    "test": "mocha tests --recursive",
+    "lint": "eslint api cron global *.js tests",
+    "fix": "eslint api cron global *.js tests --fix"
   },
   "author": "Provatas Dimitris, Pagakis Dimosthenis",
   "license": "ISC",
