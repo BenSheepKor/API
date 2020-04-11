@@ -112,7 +112,7 @@ async function prepareAndSave(weatherObj) {
                     throw new Error();
                 }
             } catch (error) {
-                console.log(error);
+                throw new Error(error)
             }
         }
     }
@@ -154,7 +154,7 @@ function notifyDiscordChannel(success, lat, lng) {
         })
         .catch((err) => {
             // do nothing
-            console.log(err);
+            throw new Error(err);
         });
 }
 
@@ -191,8 +191,10 @@ function checkLocationPinged(lat, lng) {
     }
     // loop over the LOCATIONS array of locations that are already pinged
     if (
-        !LOCATIONS.find(
-            (location) => location.lat === lat && location.lng === lng
+        LOCATIONS.find(
+            (location) =>
+                Math.abs(location.lat - lat) >= 0.4 &&
+                Math.abs(location.lng - lng) >= 0.4
         )
     ) {
         LOCATIONS.push({ lat, lng });
