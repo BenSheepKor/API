@@ -167,7 +167,7 @@ function notifyDiscordChannel(success, lat, lng) {
  *
  * @returns {Boolean} Returns true if deletion was successful
  */
-async function deleteWeatherData() {
+function deleteWeatherData() {
     return Weather.deleteMany({}).then((res, err) => {
         if (err) {
             throw new Error(err);

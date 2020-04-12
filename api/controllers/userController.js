@@ -42,14 +42,13 @@ const { checkForToken, isAuthorized } = require('../../global/functions');
  */
 exports.getUsers = () => {
     // Return users in descending _id order. Last inserted first to show
-    return User.find({})
-        .then((users) => {
-            return users;
-        })
-        .catch((err) => {
-            // do nothing for now. We will implement a global catch error function
-            console.log(err);
-        });
+    return User.find({}, (err, users) => {
+        if (err) {
+            throw new Error(err);
+        }
+
+        return users;
+    });
 };
 
 /**
@@ -73,9 +72,9 @@ exports.me = async (args, req) => {
             const { lat, lng } = getUserLocationByIp(req);
 
             // use token to get user's data
-            return User.findOne({ token }).then((user, error) => {
-                if (error) {
-                    throw new Error(error);
+            return User.findOne({ token }, (err, user) => {
+                if (err) {
+                    throw new Error(err);
                 }
 
                 // Run the location checks before returning data to user
@@ -86,14 +85,18 @@ exports.me = async (args, req) => {
                 if (lat && lng) {
                     // if user location is not already known, simply store the coordinates without any further checking
                     if (!user.lat && !user.lng) {
-                        User.findByIdAndUpdate(user.id, {
-                            'location.lat': lat,
-                            'location.lng': lng,
-                        }).then((user, error) => {
-                            if (error) {
-                                throw new Error();
+                        user.update(
+                            user.id,
+                            {
+                                'location.lat': lat,
+                                'location.lng': lng,
+                            },
+                            (err) => {
+                                if (err) {
+                                    throw new Error(err);
+                                }
                             }
-                        });
+                        );
                     }
 
                     // experimenting. A difference of 0.04 is considered significant
@@ -101,14 +104,17 @@ exports.me = async (args, req) => {
                         Math.abs(user.lat - lat) >= 0.04 ||
                         Math.abs(user.lng - lng) >= 0.04
                     ) {
-                        User.findByIdAndUpdate(user.id, {
-                            'location.lat': lat,
-                            'location.lng': lng,
-                        }).then((user, error) => {
-                            if (error) {
-                                throw new Error();
+                        user.update(
+                            {
+                                'location.lat': lat,
+                                'location.lng': lng,
+                            },
+                            (err) => {
+                                if (err) {
+                                    throw new Error(err);
+                                }
                             }
-                        });
+                        );
                     }
                 }
                 return user;
@@ -260,7 +266,7 @@ function validatePassword(password) {
  * @returns {String | Boolean} Returns a JWT token if passwords are the same. Otherwise, returns false
  */
 
-async function verifyPassword(checkValue, password, isUsername = false) {
+function verifyPassword(checkValue, password, isUsername = false) {
     const filterObj = {};
 
     if (isUsername) {
@@ -356,9 +362,7 @@ async function registerUser(email, password, lat, lng) {
     // does not add lat and lng if they are null
     const user = new User({ id, email, password, location });
 
-    const res = await user.save();
-
-    return res;
+    return user.save();
 }
 
 /**
@@ -371,12 +375,12 @@ async function registerUser(email, password, lat, lng) {
  * @returns {Number} The id of the user about to register
  *
  */
-async function generateId() {
+function generateId() {
     return User.find()
         .sort({ _id: -1 })
         .limit(1)
         .then((users) => {
-            if (users.length > 0) {
+            if (users.length) {
                 return users[0].id + 1;
             }
 
