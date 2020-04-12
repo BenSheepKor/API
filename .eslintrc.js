@@ -25,8 +25,6 @@ module.exports = {
     'no-console': 0,
     'no-empty': 0,
     'no-irregular-whitespace': 0,
-    // styling
-    // camelcase: ['error', { allow: ['joined_at', 'last_log_in'] }],
     // prettier
     "prettier/prettier": "error"
   },
