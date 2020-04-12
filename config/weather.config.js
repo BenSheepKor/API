@@ -7,4 +7,8 @@ module.exports = Object.freeze({
         LAT: 39.6243,
         LNG: 19.9217,
     },
+    ENDPOINTS: {
+        FORECAST: 'forecast',
+        WEATHER: 'weather',
+    }
 });

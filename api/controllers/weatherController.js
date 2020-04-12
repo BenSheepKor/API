@@ -3,13 +3,15 @@
 // Get mongoose to connect with the mongodb database
 const mongoose = require('mongoose');
 
-// axios with interceptors
-const axios = require('../../global/axios/axios.config');
 // Get models
 const Weather = mongoose.model('Weather');
 
-const { checkForToken, isAuthorized } = require('../../global/functions');
-const { API_URL, UNITS, APP_ID } = require('../../cron/weather/weather.config');
+const {
+    checkForToken,
+    isAuthorized,
+    fetchWeatherData,
+} = require('../../global/functions');
+const { ENDPOINTS } = require('../../config/weather.config');
 
 exports.getWeatherByCoordinates = async (args, req) => {
     // retrieve the token
@@ -54,11 +56,13 @@ exports.getWeatherByCoordinates = async (args, req) => {
                      * If there is no weather data store for the given coordinates, simply fetch the weather data from the third party api
                      * and return a weather object according to our Model
                      */
-                    const url = `${API_URL}weather?lat=${lat}&lon=${lng}&units=${UNITS}&appid=${APP_ID}`;
-
-                    return axios.get(url).then(async (weatherData) => {
-                        return await prepareWeatherResponseObject(weatherData);
-                    });
+                    return fetchWeatherData(ENDPOINTS.WEATHER, lat, lng).then(
+                        async (weatherData) => {
+                            return await prepareWeatherResponseObject(
+                                weatherData
+                            );
+                        }
+                    );
                 });
         }
     }
@@ -93,7 +97,6 @@ function prepareWeatherResponseObject(fullWeatherResponseObject) {
     return newWeatherObject
         .save()
         .then(() => {
-            console.log(newWeatherObject);
             return newWeatherObject;
         })
         .catch((error) => {

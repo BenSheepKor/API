@@ -16,9 +16,9 @@ const nJwt = require('njwt');
 const jwtConfigs = require('../jwt/config.dev');
 
 // get axios to use iplocate
-const axios = require('../../global/axios/axios.config');
+const axios = require('../../global/axios');
 
-const { DEFAULT_LOCATION } = require('../../cron/weather/weather.config');
+const { DEFAULT_LOCATION } = require('../../config/weather.config');
 const { checkForToken, isAuthorized } = require('../../global/functions');
 
 /**

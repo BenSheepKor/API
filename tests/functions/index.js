@@ -1,4 +1,4 @@
-const { dev } = require('../config');
+const { dev } = require('../../config');
 // testing framework for HTTP requests
 const request = require('supertest')(dev.url);
 

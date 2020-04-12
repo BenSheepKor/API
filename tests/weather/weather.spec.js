@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/BenSheep');
 
-const axios = require('axios');
 const chai = require('chai');
 // eslint-disable-next-line no-unused-vars
 const should = chai.should();
@@ -11,16 +10,13 @@ const { dev } = require('../../config');
 // testing framework for HTTP requests
 const request = require('supertest')(dev.url);
 
-const {
-    DEFAULT_LOCATION,
-    API_URL,
-    UNITS,
-    APP_ID,
-} = require('../../cron/weather/weather.config');
-
 const Weather = require('../../api/models/weatherModel');
 
+const { DEFAULT_LOCATION, ENDPOINTS } = require('../../config/weather.config');
+
+// FUNCTIONS
 const { logInWithValidCredentials } = require('../functions');
+const { fetchWeatherData } = require('../../global/functions');
 
 describe('get weather data', () => {
     before((done) => {
@@ -28,10 +24,13 @@ describe('get weather data', () => {
             if (err) {
                 throw new Error(err);
             }
-            const url = `${API_URL}forecast?lat=${DEFAULT_LOCATION.LAT}&lon=${DEFAULT_LOCATION.LNG}&units=${UNITS}&appid=${APP_ID}`;
 
-            axios.get(url).then((res) => {
-                saveWeatherData(res.data);
+            fetchWeatherData(
+                ENDPOINTS.FORECAST,
+                DEFAULT_LOCATION.LAT,
+                DEFAULT_LOCATION.LNG
+            ).then((res) => {
+                saveWeatherData(res);
                 done();
             });
         });
