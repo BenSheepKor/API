@@ -1,7 +1,5 @@
 'use strict';
 
-const mongoose = require('mongoose');
-
 const Course = require('../models/courseModel');
 const { checkForToken } = require('../../global/functions');
 

@@ -12,7 +12,6 @@ const url = config.dev.url;
 const request = require('supertest')(url);
 
 const { logInWithValidCredentials } = require('../functions');
-const User = require('../../api/models/userModel');
 const Course = require('../../api/models/courseModel');
 
 describe('get my courses', () => {
