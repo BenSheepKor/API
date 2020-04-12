@@ -1,5 +1,5 @@
 // Require express to develop the API
-var express = require('express'),
+const express = require('express'),
     // Make this application and express instance
     app = express(),
     // Use the port defined in "options" if exists, else on port 4000
@@ -21,15 +21,15 @@ app.options('*', cors()); // include before other routes
 // Make Mongoose use `findOneAndUpdate()`. Note that this option is `true` by default, you need to set it to false.
 mongoose.set('useFindAndModify', false);
 
-var expressGraphQL = require('express-graphql');
+const expressGraphQL = require('express-graphql');
 
 // GraphQL schema
-var schema = require('./api/graphql/schema');
+const schema = require('./api/graphql/schema');
 
 // Root resolver
-var root = require('./api/graphql/resolver');
+const root = require('./api/graphql/resolver');
 
-var errorController = require('./api/errors/errorController');
+const errorController = require('./api/errors/errorController');
 
 // Use graphql for the API
 app.use(
@@ -55,7 +55,7 @@ mongoose.Promise = global.Promise;
 mongoose.connect('mongodb://localhost/BenSheep');
 
 // register routes
-var routes = require('./api/routes/all_routes');
+const routes = require('./api/routes/all_routes');
 routes(app);
 
 // Make app listen to the port
