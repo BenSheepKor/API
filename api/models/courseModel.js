@@ -23,23 +23,32 @@ const CourseSchema = new Schema({
         type: Number,
         required: false,
     },
+    /**
+     * Both start and end will be stored in minutes so we can perform $gte and $lte on mongodb queries
+     *
+     * ******************** NOTE TO FRONTEND *********************************
+     *
+     * When handling the schedule selection during creation of a new course, use a javascript date object.
+     * From said object, extract:
+     *  1. the day: date.getDay()
+     *  2. the hours (in minutes): date.getHours() * 60
+     *  3. the minutes: date.getMinutes()
+     *
+     * and format the schedule object as such:
+     *  schedule: {
+     *      0: {
+     *          start: 540 (09:00),
+     *          end: 660 (11:00)
+     *      },
+     *      ...
+     * }
+     *
+     * ******************** NOTE TO FRONTEND *********************************
+     */
     schedule: {
-        days: {
-            type: Array,
-        },
-        time: {
-            day: {
-                type: String,
-            },
-            start: {
-                type: Number,
-            },
-            end: {
-                type: Number,
-            },
-        },
+        type: Array,
+        default: [],
     },
-    required: false,
 });
 
 // 1 means ASC. -1 means DESC

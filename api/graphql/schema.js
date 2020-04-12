@@ -32,19 +32,15 @@ var schema = buildSchema(`
     },
     type Course {
       name: String!,
-      schedule: CourseSchedule,
+      schedule: [CourseSchedule],
       professor: String,
       semester: Int,
       grade: Float,
     },
     type CourseSchedule{
-      days: [String!]!,
-      time: CourseTimeSchedule!
-    },
-    type CourseTimeSchedule{
-      day: String!,
+      day: Int!,
       start: Int!,
-      end: Int!
+      end: Int!,
     },
     type Mutation {
       register(email: String!, password: String!): User,

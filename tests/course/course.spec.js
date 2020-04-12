@@ -18,14 +18,31 @@ describe('get my courses', () => {
     // we delete all users and create just one during the test suite. We are confident that said user will have id = 1;
     const USER_ID = 1;
     const COURSE_NAME = 'networks';
+    const SCHEDULE = [
+        {
+            day: 1,
+            start: 520,
+            end: 660,
+        },
+        {
+            day: 3,
+            start: 520,
+            end: 660,
+        },
+    ];
+
     const QUERY = `query {
         courses(userId: ${USER_ID}) {
-            name
+            name,
+            schedule {
+                day
+                start
+            }
         }
     }`;
 
     before('create course for user', async (done) => {
-        createCourse(USER_ID, COURSE_NAME);
+        createCourse(USER_ID, COURSE_NAME, SCHEDULE);
         done();
     });
 
@@ -46,9 +63,19 @@ describe('get my courses', () => {
                         throw new Error(err);
                     }
 
+                    const course = res.body.data.courses[0];
+
                     res.body.data.courses.should.be.a('array');
-                    res.body.data.courses[0].should.have.property('name');
-                    res.body.data.courses[0].name.should.equal(COURSE_NAME);
+                    course.should.have.property('name');
+                    course.name.should.equal(COURSE_NAME);
+
+                    // in js array of objects is of type object
+                    course.should.have
+                        .property('schedule')
+                        .and.should.be.a('object');
+
+                    const schedule = course.schedule[0];
+                    schedule.should.have.keys('day', 'start');
                     done();
                 });
         });
@@ -72,8 +99,12 @@ describe('get my courses', () => {
     });
 });
 
-const createCourse = async (userId, courseName) => {
-    const course = new Course({ user_id: userId, name: courseName });
+const createCourse = async (userId, courseName, courseSchedule) => {
+    const course = new Course({
+        user_id: userId,
+        name: courseName,
+        schedule: courseSchedule,
+    });
 
     await deleteCourses();
 
