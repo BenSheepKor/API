@@ -6,7 +6,8 @@ var schema = buildSchema(`
     type Query {
         users: [User]
         me: User
-        weather(lat: Float!, lng: Float!): Weather
+        weather(lat: Float!, lng: Float!): Weather,
+        courses(userId: Int!): [Course]
     },
     type User {
       id: Int!,
@@ -28,7 +29,23 @@ var schema = buildSchema(`
       lat: Float,
       lng: Float,
       timestamp: Int
-    }
+    },
+    type Course {
+      name: String!,
+      schedule: CourseSchedule,
+      professor: String,
+      semester: Int,
+      grade: Float,
+    },
+    type CourseSchedule{
+      days: [String!]!,
+      time: CourseTimeSchedule!
+    },
+    type CourseTimeSchedule{
+      day: String!,
+      start: Int!,
+      end: Int!
+    },
     type Mutation {
       register(email: String!, password: String!): User,
       login(email: String, username: String, password: String!): JWT
