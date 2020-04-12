@@ -16,8 +16,14 @@ const User = require('../../api/models/userModel');
 const Course = require('../../api/models/courseModel');
 
 describe('get my courses', () => {
+    // we delete all users and create just one during the test suite. We are confident that said user will have id = 1;
     const USER_ID = 1;
     const COURSE_NAME = 'networks';
+    const QUERY = `query {
+        courses(userId: ${USER_ID}) {
+            name
+        }
+    }`;
 
     before('create course for user', async (done) => {
         createCourse(USER_ID, COURSE_NAME);
@@ -31,16 +37,9 @@ describe('get my courses', () => {
             }
 
             const token = res.body.data.login.token;
-            // we delete all users and create just one during the test suite. We are confident that said user will have id = 1;
-            const query = `query {
-                courses(userId: ${USER_ID}) {
-                    name
-                }
-            }`;
-
             request
                 .post('/graphql')
-                .send({ query })
+                .send({ query: QUERY })
                 .set('Authorization', 'Bearer ' + token)
                 .expect(200)
                 .end((err, res) => {
@@ -54,6 +53,23 @@ describe('get my courses', () => {
                     done();
                 });
         });
+    });
+
+    it("attempts to retrieve user's courses without auth", (done) => {
+        request
+            .post('/graphql')
+            .send({ query: QUERY })
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(401);
+                done();
+            });
     });
 });
 

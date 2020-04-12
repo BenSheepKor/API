@@ -70,7 +70,9 @@ describe('register user', () => {
                 if (err) {
                     return done(err);
                 }
-                res.body.errors[0].status.should.equal(409);
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(409);
                 done();
             });
     });
@@ -96,7 +98,9 @@ describe('register user ', () => {
                 if (err) {
                     return done(err);
                 }
-                res.body.errors[0].status.should.equal(422);
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(422);
                 done();
             });
     });
@@ -123,7 +127,9 @@ describe('register user ', () => {
                 if (err) {
                     return done(err);
                 }
-                res.body.errors[0].status.should.equal(422);
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(422);
                 done();
             });
     });
@@ -170,7 +176,9 @@ describe('login user', () => {
                     return done(err);
                 }
 
-                res.body.errors[0].status.should.equal(404);
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(404);
                 done();
             });
     });
@@ -196,7 +204,9 @@ describe('login user', () => {
                     return done(err);
                 }
 
-                res.body.errors[0].status.should.equal(401);
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(401);
                 done();
             });
     });
@@ -255,7 +265,9 @@ describe('get user information /me', () => {
                     return done(err);
                 }
 
-                res.body.errors[0].status.should.equal(401);
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(401);
                 done();
             });
     });
