@@ -1,13 +1,16 @@
 // package to set up cron jobs
 const cron = require('node-cron');
 const axios = require('../../global/axios/axios.config');
-const weatherConfig = require('../../config/weather.config');
+const { DEFAULT_LOCATION, ENDPOINTS } = require('../../config/weather.config');
 
 // get access at user functions
 const userController = require('../../api/controllers/userController');
 
 // get access to the weather model so we can create an instance
 const Weather = require('../../api/models/weatherModel');
+
+// FUNCTIONS
+const { fetchWeatherData } = require('../../global/functions');
 
 /**
  * Count to limit the number of weather reports that are stored in the database per cron job. For more details
@@ -27,8 +30,8 @@ userController.getUsers().then((users) => {
     // Loop through users
     users.forEach((user) => {
         // default coordinates for Corfu, our main point of interest for alpha
-        let lat = weatherConfig.DEFAULT_LOCATION.LAT;
-        let lng = weatherConfig.DEFAULT_LOCATION.LNG;
+        let lat = DEFAULT_LOCATION.LAT;
+        let lng = DEFAULT_LOCATION.LNG;
 
         // if user location is known, change the url coordinates
         if (user.location.lat && user.location.lng) {
@@ -38,9 +41,6 @@ userController.getUsers().then((users) => {
 
         // check that the current user's location has not been pinged for yet. If it has, continue to next user
         if (!checkLocationPinged(lat, lng)) {
-            // open weather API request url
-            const url = `${weatherConfig.API_URL}forecast?lat=${lat}&lon=${lng}&units=${weatherConfig.UNITS}&appid=${weatherConfig.APP_ID}`;
-
             // If user location is not known, default to Corfu, which is the "release base" of our software
             // Cron job that runs every 3 hours. Gets a 5 day forecast for every 3 hours for a specific location given by latitude and longtitude
             // 0 */3 * * *
@@ -54,13 +54,15 @@ userController.getUsers().then((users) => {
                 await deleteWeatherData();
 
                 // shot the request to the open weather API
-                axios.get(url).then(async (res) => {
-                    // save data
-                    const success = await prepareAndSave(res);
+                fetchWeatherData(ENDPOINTS.FORECAST, lat, lng).then(
+                    async (res) => {
+                        // save data
+                        const success = await prepareAndSave(res);
 
-                    // use discord bot. Used during dev for debugging purposes
-                    notifyDiscordChannel(success, lat, lng);
-                });
+                        // use discord bot. Used during dev for debugging purposes
+                        notifyDiscordChannel(success, lat, lng);
+                    }
+                );
             });
         }
     });
