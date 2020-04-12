@@ -1,4 +1,4 @@
-const axios = require('../axios/axios.config');
+const axios = require('../axios');
 const User = require('../../api/models/userModel');
 const {
     API_URL,
