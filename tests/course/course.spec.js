@@ -52,7 +52,6 @@ describe('get my courses', () => {
                 throw new Error(err);
             }
 
-            console.log(res.body.data);
             const token = res.body.data.login.token;
             request
                 .post('/graphql')

@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon server.js",
-    "test": "mocha tests --recursive --exit",
+    "test": "mocha tests/index.spec.js --exit --timeout 5000",
     "lint": "eslint api cron global *.js tests",
     "fix": "eslint api cron global *.js tests --fix"
   },
