@@ -16,7 +16,6 @@ module.exports = {
   },
   rules: {
     semi: ['error', 'always'],
-    quotes: ['error', 'single'],
     'prefer-const': 'error',
     curly: 'error',
     'default-case': 'error',
