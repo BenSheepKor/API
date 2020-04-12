@@ -16,7 +16,7 @@ const {
     API_URL,
     UNITS,
     APP_ID,
-} = require('../../cron/weather/weather.config');
+} = require('../../config/weather.config');
 
 const Weather = require('../../api/models/weatherModel');
 

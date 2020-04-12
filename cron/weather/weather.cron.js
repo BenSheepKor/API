@@ -1,7 +1,7 @@
 // package to set up cron jobs
 const cron = require('node-cron');
 const axios = require('../../global/axios/axios.config');
-const weatherConfig = require('./weather.config');
+const weatherConfig = require('../../config/weather.config');
 
 // get access at user functions
 const userController = require('../../api/controllers/userController');

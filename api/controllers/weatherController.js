@@ -9,7 +9,7 @@ const axios = require('../../global/axios/axios.config');
 const Weather = mongoose.model('Weather');
 
 const { checkForToken, isAuthorized } = require('../../global/functions');
-const { API_URL, UNITS, APP_ID } = require('../../cron/weather/weather.config');
+const { API_URL, UNITS, APP_ID } = require('../../config/weather.config');
 
 exports.getWeatherByCoordinates = async (args, req) => {
     // retrieve the token
@@ -93,7 +93,6 @@ function prepareWeatherResponseObject(fullWeatherResponseObject) {
     return newWeatherObject
         .save()
         .then(() => {
-            console.log(newWeatherObject);
             return newWeatherObject;
         })
         .catch((error) => {
