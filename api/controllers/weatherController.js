@@ -1,8 +1,5 @@
 'use strict';
 
-// Get mongoose to connect with the mongodb database
-const mongoose = require('mongoose');
-
 // Get models
 const Weather = require('../models/weatherModel');
 
