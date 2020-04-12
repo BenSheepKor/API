@@ -1,6 +1,7 @@
 // Use the UserController to get its functions.
 const UserController = require('../controllers/userController');
 const WeatherController = require('../controllers/weatherController.js');
+const CourseController = require('../controllers/courseController');
 
 // Root resolver for the GraphQL endpoints' callbacks
 const root = {
@@ -21,6 +22,11 @@ const root = {
     // Weather related
     weather: (args, req) => {
         return WeatherController.getWeatherByCoordinates(args, req);
+    },
+
+    // Courses related
+    courses: (args, req) => {
+        return CourseController.courses(args, req);
     },
 };
 
