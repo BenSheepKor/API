@@ -8,8 +8,6 @@ type User {
   email: String!,
   username: String,
   faculty: String!,
-  lat: String,
-  lng: String,
 },
 type JWT {
   token: String!
@@ -40,7 +38,7 @@ const queries = `
 type Query {
   users: [User]
   me: User
-  weather(lat: Float!, lng: Float!): Weather,
+  weather(city: String!): Weather,
   courses(userId: Int!): [Course]
 },
 `;

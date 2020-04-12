@@ -23,10 +23,6 @@ const UserSchema = new Schema({
         type: String,
         required: true,
     },
-    faculty: {
-        type: String,
-        default: '',
-    },
     joined_at: {
         type: Date,
         default: Date.now,
@@ -39,9 +35,9 @@ const UserSchema = new Schema({
         type: String,
         default: '',
     },
-    location: {
-        lat: Number,
-        lng: Number,
+    faculty_id: {
+        type: Schema.Types.ObjectId,
+        ref: 'Faculty',
     },
 });
 

@@ -8,9 +8,6 @@ const weatherSchema = new Schema({
         type: Number,
         required: true,
     },
-    name: {
-        type: String,
-    },
     description: {
         type: String,
         required: true,
@@ -19,12 +16,13 @@ const weatherSchema = new Schema({
     location: {
         lng: {
             type: Number,
-            required: true,
+            required: false,
         },
         lat: {
             type: Number,
-            required: true,
+            required: false,
         },
+        required: false,
     },
     timestamp: {
         type: Number,
@@ -32,6 +30,6 @@ const weatherSchema = new Schema({
     },
 });
 
-weatherSchema.index({ timestamp: 1, location: 1 });
+weatherSchema.index({ timestamp: 1, city: 1 });
 
 module.exports = mongoose.model('Weather', weatherSchema);
