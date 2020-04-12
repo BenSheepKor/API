@@ -11,9 +11,6 @@ jobs:
             - checkout
             - setup_remote_docker
             - run:
-                  name: Lint
-                  command: npm run lint
-            - run:
                   name: Update npm
                   command: npm install -g npm@latest
             - restore_cache:
@@ -25,6 +22,9 @@ jobs:
                   key: dependency-cache-{{ checksum "package-lock.json" }}
                   paths:
                       - node_modules
+            - run:
+                  name: Lint
+                  command: npm run lint
             - run:
                   name: Install wait-on
                   command: npm install -g wait-on
