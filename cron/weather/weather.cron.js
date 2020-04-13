@@ -1,177 +1,150 @@
-// // package to set up cron jobs
-// const cron = require('node-cron');
-// const axios = require('../../global/axios');
-// const { DEFAULT_LOCATION, ENDPOINTS } = require('../../config/weather.config');
+// package to set up cron jobs
+const cron = require('node-cron');
+const axios = require('../../global/axios');
+const { DEFAULT_LOCATION, ENDPOINTS } = require('../../config/weather.config');
 
-// // get access to the weather model so we can create an instance
-// const Weather = require('../../api/models/weatherModel');
+// get access to the weather model so we can create an instance
+const Weather = require('../../api/models/weatherModel');
+const Location = require('../../api/models/locationModel');
 
-// // FUNCTIONS
-// const { fetchWeatherData } = require('../../global/functions');
+// FUNCTIONS
+const { fetchWeatherData } = require('../../global/functions');
 
-// /**
-//  * Count to limit the number of weather reports that are stored in the database per cron job. For more details
-//  *
-//  * @see prepareAndSave
-//  */
-// const COUNT = 8;
+/**
+ * Count to limit the number of weather reports that are stored in the database per cron job. For more details
+ *
+ * @see prepareAndSave
+ */
+const COUNT = 8;
 
-// /**
-//  * Function that receives the open weather api response object and prepares the object to be used by our weather model
-//  * Throughout development process, to save up on space, we will hold information only for the next 24 hours
-//  *
-//  * The API response is a 5 day 3-hourly forecast Therefore, we will loop only through the first 8 elements: 3x8 = 24 hours
-//  *
-//  * @param {Object} weatherObj
-//  *
-//  * @returns {Boolean} Returns true if all weather objects are saved else throws error
-//  */
-// async function prepareAndSave(weatherObj) {
-//     const weatherList = weatherObj.list;
+Location.find({}, (err, locations) => {
+    if (err) {
+        throw new Error(err);
+    }
 
-//     // make sure the list has elements
-//     if (weatherList.length > 0) {
-//         // Get data from the open weather API response
+    if (locations.length) {
+        locations.forEach(async (location) => {
+            // Set up a cron job every 3 hours of each different city
+            cron.schedule('0 */3 * * *', async () => {
+                /**
+                 * Delete data. No prior timestamp data wanted during dev. Might change after alpha
+                 *
+                 * @see deleteWeatherData
+                 */
 
-//         const name = weatherObj.city.name || '';
+                await deleteWeatherData(location.name);
 
-//         const location = {
-//             lat: weatherObj.city.coord.lat || 0,
-//             lng: weatherObj.city.coord.lon || 0,
-//         };
+                // shot the request to the open weather API
+                fetchWeatherData(ENDPOINTS.FORECAST, location.name).then(
+                    async (res) => {
+                        // save data
+                        const success = await prepareAndSave(res);
 
-//         // Loop through the weather reports. there are 40 reports. 8 reports per day for 5 days
-//         for (let i = 0; i < COUNT; i++) {
-//             // get the current report
-//             const report = weatherList[i];
+                        // use discord bot. Used during dev for debugging purposes
+                        notifyDiscordChannel(success, location.name);
+                    }
+                );
+            });
+        });
+    }
+});
 
-//             // create the weather object
-//             const weather = new Weather({
-//                 timestamp: report.dt || 0,
-//                 temp: report.main.temp || '',
-//                 description: report.weather[0].description || '',
-//                 location,
-//                 name,
-//             });
-//             // successful save to database
-//             try {
-//                 const success = await weather.save();
+/**
+ * Function that receives the open weather api response object and prepares the object to be used by our weather model
+ * Throughout development process, to save up on space, we will hold information only for the next 24 hours
+ *
+ * The API response is a 5 day 3-hourly forecast Therefore, we will loop only through the first 8 elements: 3x8 = 24 hours
+ *
+ * @param {Object} weatherObj
+ *
+ * @returns {Boolean} Returns true if all weather objects are saved else throws error
+ */
+async function prepareAndSave(weatherObj) {
+    const weatherList = weatherObj.list;
 
-//                 // throw error even if one object is not stored
-//                 if (!success) {
-//                     throw new Error();
-//                 }
-//             } catch (error) {
-//                 throw new Error(error);
-//             }
-//         }
-//     }
+    // make sure the list has elements
+    if (weatherList.length > 0) {
+        // Get data from the open weather API response
 
-//     // if all data is store return true
-//     return true;
-// }
+        const city = weatherObj.city.name || '';
 
-// /**
-//  * Function that sends a message to a discord channel that lets us know the state of the weather cron job
-//  *
-//  * @param {Boolean} success Determined by if all weather data are succesfully stored in the dabase
-//  */
-// function notifyDiscordChannel(success, lat, lng) {
-//     let content = 'Weather data saved';
+        const location = {
+            lat: weatherObj.city.coord.lat || 0,
+            lng: weatherObj.city.coord.lon || 0,
+        };
 
-//     if (!success) {
-//         content = 'Something went wrong';
-//     }
+        // Loop through the weather reports. there are 40 reports. 8 reports per day for 5 days
+        for (let i = 0; i < COUNT; i++) {
+            // get the current report
+            const report = weatherList[i];
 
-//     content +=
-//         ' | Cron executed at ' +
-//         new Date() +
-//         '\n Coordinates: \n Lat: ' +
-//         lat +
-//         '\n Lng: ' +
-//         lng +
-//         '\n =================================';
+            // create the weather object
+            const weather = new Weather({
+                timestamp: report.dt || 0,
+                temp: report.main.temp || '',
+                description: report.weather[0].description || '',
+                location,
+                city,
+            });
+            // successful save to database
+            try {
+                const success = await weather.save();
 
-//     const body = { content };
+                // throw error even if one object is not stored
+                if (!success) {
+                    throw new Error();
+                }
+            } catch (error) {
+                throw new Error(error);
+            }
+        }
+    }
 
-//     axios
-//         .post(
-//             'https://discordapp.com/api/webhooks/691348810835820595/TpPlu4t_78e_g4de7r00noLKpBEUbu3fZJS0rP3DzaoXyGYFofGF6qiNb4-_eXc8HsIu',
-//             body
-//         )
-//         .then(() => {
-//             // do nothing
-//         })
-//         .catch((err) => {
-//             // do nothing
-//             throw new Error(err);
-//         });
-// }
+    // if all data is store return true
+    return true;
+}
 
-// /**
-//  * Function that deletes all data when the cron job starts. That way, we ensure that there is no weather data for prior times
-//  * After alpha release this is prone to change
-//  * @change
-//  *
-//  * @returns {Boolean} Returns true if deletion was successful
-//  */
-// function deleteWeatherData() {
-//     return Weather.deleteMany({}).then((res, err) => {
-//         if (err) {
-//             throw new Error(err);
-//         }
+/**
+ * Function that sends a message to a discord channel that lets us know the state of the weather cron job
+ *
+ * @param {Boolean} success Determined by if all weather data are succesfully stored in the dabase
+ */
+function notifyDiscordChannel(success, city) {
+    let content = `${city} weather data fetched at ${new Date()}`;
 
-//         return res;
-//     });
-// }
+    if (!success) {
+        content = 'Something went wrong';
+    }
 
-// /**
-//  * Function that is used by the weather cron to decide wether it should ping for the current user's location
-//  *
-//  * @param {Number} lat The langitude of the current user's location
-//  * @param {Number} lng The longtitude of the current user's location
-//  */
+    const body = { content };
 
-// function checkLocationPinged(lat, lng) {
-//     // LOCATIONS is empty because this is the first user. add location to array and return early
+    axios
+        .post(
+            'https://discordapp.com/api/webhooks/691348810835820595/TpPlu4t_78e_g4de7r00noLKpBEUbu3fZJS0rP3DzaoXyGYFofGF6qiNb4-_eXc8HsIu',
+            body
+        )
+        .then(() => {
+            // do nothing
+        })
+        .catch((err) => {
+            // do nothing
+            throw new Error(err);
+        });
+}
 
-//     if (!LOCATIONS.length) {
-//         LOCATIONS.push({ lat, lng });
-//         return false;
-//     }
-//     // loop over the LOCATIONS array of locations that are already pinged
-//     if (
-//         LOCATIONS.find(
-//             (location) =>
-//                 Math.abs(location.lat - lat) >= 0.4 &&
-//                 Math.abs(location.lng - lng) >= 0.4
-//         )
-//     ) {
-//         LOCATIONS.push({ lat, lng });
-//         return false;
-//     }
+/**
+ * Function that deletes all data when the cron job starts. That way, we ensure that there is no weather data for prior times
+ * After alpha release this is prone to change
+ * @change
+ *
+ * @returns {Boolean} Returns true if deletion was successful
+ */
+function deleteWeatherData(city) {
+    return Weather.deleteMany({ city }).then((res, err) => {
+        if (err) {
+            throw new Error(err);
+        }
 
-//     return true;
-// }
-
-// // 0 */3 * * *
-// cron.schedule('0 */3 * * *', async () => {
-//     /**
-//      * Delete data. No prior timestamp data wanted during dev. Might change after alpha
-//      *
-//      * @see deleteWeatherData
-//      */
-
-//     await deleteWeatherData();
-
-//     // shot the request to the open weather API
-//     fetchWeatherData(ENDPOINTS.FORECAST, lat, lng).then(
-//         async (res) => {
-//             // save data
-//             const success = await prepareAndSave(res);
-
-//             // use discord bot. Used during dev for debugging purposes
-//             notifyDiscordChannel(success, lat, lng);
-//         }
-//     );
-// });
+        return res;
+    });
+}

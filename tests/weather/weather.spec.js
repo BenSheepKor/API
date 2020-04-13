@@ -32,7 +32,7 @@ describe('get weather data', () => {
         });
     });
 
-    it('returns weather data given specific coordinates w/ auth', (done) => {
+    it('returns weather data given a specific city w/ auth', (done) => {
         logInWithValidCredentials().end((err, res) => {
             if (err) {
                 throw new Error(err);
