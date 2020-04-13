@@ -51,6 +51,6 @@ const CourseSchema = new Schema({
 });
 
 // 1 means ASC. -1 means DESC
-CourseSchema.index({ name: 1 });
+CourseSchema.index({ user_id: 1, name: 1 }, { unique: true });
 
 module.exports = mongoose.model('Course', CourseSchema);

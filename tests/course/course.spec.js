@@ -146,6 +146,49 @@ describe('Courses', () => {
                 });
             });
     });
+
+    it('modifies a course for a user', (done) => {
+        const query = `mutation {
+            addCourse(name: "${COURSE_NAME}", schedule: {
+                day: 3,
+                start: 520,
+                end: 660,
+            }) {
+                name
+            }
+        }`;
+
+        request
+            .post('/graphql')
+            .send({ query })
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(401);
+
+                logInWithValidCredentials().end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    const token = res.body.data.login.token;
+
+                    request
+                        .post('/graphql')
+                        .send({ query })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            done();
+                        });
+                });
+            });
+    });
 });
 
 const createCourse = async (userId, courseName, courseSchedule) => {
