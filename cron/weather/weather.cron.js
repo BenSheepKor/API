@@ -1,13 +1,11 @@
 // package to set up cron jobs
 const cron = require('node-cron');
 const axios = require('../../global/axios');
-const { DEFAULT_LOCATION, ENDPOINTS } = require('../../config/weather.config');
-
-// get access at user functions
-const userController = require('../../api/controllers/userController');
+const { ENDPOINTS } = require('../../config/weather.config');
 
 // get access to the weather model so we can create an instance
 const Weather = require('../../api/models/weatherModel');
+const Location = require('../../api/models/locationModel');
 
 // FUNCTIONS
 const { fetchWeatherData } = require('../../global/functions');
@@ -19,31 +17,14 @@ const { fetchWeatherData } = require('../../global/functions');
  */
 const COUNT = 8;
 
-// Array of locations already pinged. If weather data for a location is already existing, do not fire the API again
-let LOCATIONS = [];
+Location.find({}, (err, locations) => {
+    if (err) {
+        throw new Error(err);
+    }
 
-// Get all users from the database
-userController.getUsers().then((users) => {
-    // empty LOCATIONS array when cron is about to start
-    LOCATIONS = [];
-
-    // Loop through users
-    users.forEach((user) => {
-        // default coordinates for Corfu, our main point of interest for alpha
-        let lat = DEFAULT_LOCATION.LAT;
-        let lng = DEFAULT_LOCATION.LNG;
-
-        // if user location is known, change the url coordinates
-        if (user.location.lat && user.location.lng) {
-            lat = user.location.lat;
-            lng = user.location.lng;
-        }
-
-        // check that the current user's location has not been pinged for yet. If it has, continue to next user
-        if (!checkLocationPinged(lat, lng)) {
-            // If user location is not known, default to Corfu, which is the "release base" of our software
-            // Cron job that runs every 3 hours. Gets a 5 day forecast for every 3 hours for a specific location given by latitude and longtitude
-            // 0 */3 * * *
+    if (locations.length) {
+        locations.forEach(async (location) => {
+            // Set up a cron job every 3 hours of each different city
             cron.schedule('0 */3 * * *', async () => {
                 /**
                  * Delete data. No prior timestamp data wanted during dev. Might change after alpha
@@ -51,21 +32,21 @@ userController.getUsers().then((users) => {
                  * @see deleteWeatherData
                  */
 
-                await deleteWeatherData();
+                await deleteWeatherData(location.name);
 
                 // shot the request to the open weather API
-                fetchWeatherData(ENDPOINTS.FORECAST, lat, lng).then(
+                fetchWeatherData(ENDPOINTS.FORECAST, location.name).then(
                     async (res) => {
                         // save data
                         const success = await prepareAndSave(res);
 
                         // use discord bot. Used during dev for debugging purposes
-                        notifyDiscordChannel(success, lat, lng);
+                        notifyDiscordChannel(success, location.name);
                     }
                 );
             });
-        }
-    });
+        });
+    }
 });
 
 /**
@@ -85,7 +66,7 @@ async function prepareAndSave(weatherObj) {
     if (weatherList.length > 0) {
         // Get data from the open weather API response
 
-        const name = weatherObj.city.name || '';
+        const city = weatherObj.city.name || '';
 
         const location = {
             lat: weatherObj.city.coord.lat || 0,
@@ -103,7 +84,7 @@ async function prepareAndSave(weatherObj) {
                 temp: report.main.temp || '',
                 description: report.weather[0].description || '',
                 location,
-                name,
+                city,
             });
             // successful save to database
             try {
@@ -128,21 +109,12 @@ async function prepareAndSave(weatherObj) {
  *
  * @param {Boolean} success Determined by if all weather data are succesfully stored in the dabase
  */
-function notifyDiscordChannel(success, lat, lng) {
-    let content = 'Weather data saved';
+function notifyDiscordChannel(success, city) {
+    let content = `${city} weather data fetched at ${new Date()}`;
 
     if (!success) {
         content = 'Something went wrong';
     }
-
-    content +=
-        ' | Cron executed at ' +
-        new Date() +
-        '\n Coordinates: \n Lat: ' +
-        lat +
-        '\n Lng: ' +
-        lng +
-        '\n =================================';
 
     const body = { content };
 
@@ -167,41 +139,12 @@ function notifyDiscordChannel(success, lat, lng) {
  *
  * @returns {Boolean} Returns true if deletion was successful
  */
-function deleteWeatherData() {
-    return Weather.deleteMany({}).then((res, err) => {
+function deleteWeatherData(city) {
+    return Weather.deleteMany({ city }).then((res, err) => {
         if (err) {
             throw new Error(err);
         }
 
         return res;
     });
-}
-
-/**
- * Function that is used by the weather cron to decide wether it should ping for the current user's location
- *
- * @param {Number} lat The langitude of the current user's location
- * @param {Number} lng The longtitude of the current user's location
- */
-
-function checkLocationPinged(lat, lng) {
-    // LOCATIONS is empty because this is the first user. add location to array and return early
-
-    if (!LOCATIONS.length) {
-        LOCATIONS.push({ lat, lng });
-        return false;
-    }
-    // loop over the LOCATIONS array of locations that are already pinged
-    if (
-        LOCATIONS.find(
-            (location) =>
-                Math.abs(location.lat - lat) >= 0.4 &&
-                Math.abs(location.lng - lng) >= 0.4
-        )
-    ) {
-        LOCATIONS.push({ lat, lng });
-        return false;
-    }
-
-    return true;
 }

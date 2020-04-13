@@ -1,10 +1,7 @@
 'use strict';
 
-// Get mongoose to connect with the mongodb database
-const mongoose = require('mongoose');
-
 // Get models
-const Weather = mongoose.model('Weather');
+const Weather = require('../models/weatherModel');
 
 const {
     checkForToken,
@@ -13,24 +10,24 @@ const {
 } = require('../../global/functions');
 const { ENDPOINTS } = require('../../config/weather.config');
 
-exports.getWeatherByCoordinates = async (args, req) => {
+exports.getWeatherByCityName = async (args, req) => {
     // retrieve the token
     const token = checkForToken(req);
 
     // make sure token matches a registered user;
     if (await isAuthorized(token)) {
         // extract coordinates
-        const { lat, lng } = args;
+        const { city } = args;
 
         // make sure both coordinates are set
-        if (lat && lng) {
+        if (city) {
             /**
              * Get weather data for given coordinates. For each coordinates pair there are 8 documents store. Since this call is about
              * current data we only want the first two becuase one of this is closer to now. @see weatherCron
              *
              * Get only the first 2 more recent documents
              */
-            return Weather.find({ location: { lat, lng } })
+            return Weather.find({ city })
                 .sort({ timestamp: 'asc' })
                 .limit(2)
                 .then((weatherDocuments, error) => {
@@ -56,7 +53,7 @@ exports.getWeatherByCoordinates = async (args, req) => {
                      * If there is no weather data store for the given coordinates, simply fetch the weather data from the third party api
                      * and return a weather object according to our Model
                      */
-                    return fetchWeatherData(ENDPOINTS.WEATHER, lat, lng).then(
+                    return fetchWeatherData(ENDPOINTS.WEATHER, city).then(
                         async (weatherData) => {
                             return await prepareWeatherResponseObject(
                                 weatherData

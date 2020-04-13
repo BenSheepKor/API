@@ -55,22 +55,20 @@ module.exports.isAuthorized = (token) => {
  * @return {Promise} The promise of the call to the third party api
  */
 
-module.exports.fetchWeatherData = (endpoint, lat, lng) => {
+module.exports.fetchWeatherData = (endpoint, city) => {
     // ensure all parameters are set
     if (endpoint && endpoint.length) {
-        if (lat && lng) {
-            switch (endpoint) {
-                case ENDPOINTS.FORECAST:
-                    return axios.get(
-                        `${API_URL}${ENDPOINTS.FORECAST}?lat=${lat}&lon=${lng}&units=${UNITS}&appid=${APP_ID}`
-                    );
-                case ENDPOINTS.WEATHER:
-                    return axios.get(
-                        `${API_URL}${ENDPOINTS.WEATHER}?lat=${lat}&lon=${lng}&units=${UNITS}&appid=${APP_ID}`
-                    );
-                default:
-                    throw new Error();
-            }
+        switch (endpoint) {
+            case ENDPOINTS.FORECAST:
+                return axios.get(
+                    `${API_URL}${ENDPOINTS.FORECAST}?q=${city}&units=${UNITS}&appid=${APP_ID}`
+                );
+            case ENDPOINTS.WEATHER:
+                return axios.get(
+                    `${API_URL}${ENDPOINTS.WEATHER}?q=${city}&units=${UNITS}&appid=${APP_ID}`
+                );
+            default:
+                throw new Error();
         }
     }
 };

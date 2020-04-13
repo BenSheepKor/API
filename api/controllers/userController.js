@@ -15,10 +15,6 @@ const nJwt = require('njwt');
 // configuration file for JWT
 const jwtConfigs = require('../jwt/config.dev');
 
-// get axios to use iplocate
-const axios = require('../../global/axios');
-
-const { DEFAULT_LOCATION } = require('../../config/weather.config');
 const { checkForToken, isAuthorized } = require('../../global/functions');
 
 /**
@@ -56,10 +52,6 @@ exports.getUsers = () => {
  *
  * Authenticates the user using a Bearer token. If token is valid, returns data for the specific user.
  *
- * It also serves a secondary purpose. It uses the IP of the user to get their location. If location is retrieved (lat,lng) a test is run against the user to see if their location is known
- *
- * If it is known, a check runs against saved location. If locations are near each other the saved location is not updated.
- * If the difference is significant, the saved location gets updated
  */
 exports.me = async (args, req) => {
     const token = checkForToken(req);
@@ -68,55 +60,12 @@ exports.me = async (args, req) => {
     if (token) {
         // check user is authorized
         if (await isAuthorized(token)) {
-            // get user's coordinates from IP address
-            const { lat, lng } = getUserLocationByIp(req);
-
             // use token to get user's data
             return User.findOne({ token }, (err, user) => {
                 if (err) {
                     throw new Error(err);
                 }
 
-                // Run the location checks before returning data to user
-                /**
-                 * This might make the endpoint a bit slower. discuss with team
-                 */
-                // check that coordinates were received by the ip lookup
-                if (lat && lng) {
-                    // if user location is not already known, simply store the coordinates without any further checking
-                    if (!user.lat && !user.lng) {
-                        user.update(
-                            user.id,
-                            {
-                                'location.lat': lat,
-                                'location.lng': lng,
-                            },
-                            (err) => {
-                                if (err) {
-                                    throw new Error(err);
-                                }
-                            }
-                        );
-                    }
-
-                    // experimenting. A difference of 0.04 is considered significant
-                    if (
-                        Math.abs(user.lat - lat) >= 0.04 ||
-                        Math.abs(user.lng - lng) >= 0.04
-                    ) {
-                        user.update(
-                            {
-                                'location.lat': lat,
-                                'location.lng': lng,
-                            },
-                            (err) => {
-                                if (err) {
-                                    throw new Error(err);
-                                }
-                            }
-                        );
-                    }
-                }
                 return user;
             });
         }
@@ -145,11 +94,8 @@ exports.createUser = async (req) => {
             const userDoesExist = await checkUserExists(email);
 
             if (!userDoesExist) {
-                // get user location
-                const { lat, lng } = getUserLocationByIp(req);
-
                 // Returns the result of saving the user in the database
-                return registerUser(email, password, lat, lng)
+                return registerUser(email, password)
                     .then((user) => {
                         // format response so GraphQL can pick it up
                         return user;
@@ -348,7 +294,7 @@ function storeToken(userId, token) {
  *
  * @returns {Number} Returns the id of the user. Throws error in case something goes wrong
  */
-async function registerUser(email, password, lat, lng) {
+async function registerUser(email, password) {
     const id = await generateId();
 
     // takes about ~80ms
@@ -356,11 +302,8 @@ async function registerUser(email, password, lat, lng) {
 
     // hashed password
     password = await bcrypt.hash(password, salt);
-
-    const location = { lat, lng };
-
     // does not add lat and lng if they are null
-    const user = new User({ id, email, password, location });
+    const user = new User({ id, email, password });
 
     return user.save();
 }
@@ -386,36 +329,4 @@ function generateId() {
 
             return 1;
         });
-}
-
-/**
- * Function that uses the request object to find the IP of the user. The IP run against an IP->Location service so we can locate the user
- * @param {Object} request
- */
-function getUserLocationByIp(request) {
-    if (request && request.headers) {
-        let ip =
-            request.headers['x-forwarded-for'] ||
-            request.connection.remoteAddress;
-        // ::ffff: is a subnet prefix for IPv4 addresses that are placed inside an IPv6
-        if (ip.indexOf('::ffff:') !== -1) {
-            ip = ip.split('::ffff:')[1];
-        }
-
-        return axios
-            .get(`https://www.iplocate.io/api/lookup/${ip}`)
-            .then((res) => {
-                if (res.latitude && res.longitude) {
-                    return {
-                        lat: res.latitude,
-                        lng: res.longiuted,
-                    };
-                }
-            });
-    }
-
-    return {
-        lat: DEFAULT_LOCATION.LAT,
-        lng: DEFAULT_LOCATION.LNG,
-    };
 }

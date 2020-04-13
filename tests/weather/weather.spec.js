@@ -12,7 +12,7 @@ const request = require('supertest')(dev.url);
 
 const Weather = require('../../api/models/weatherModel');
 
-const { DEFAULT_LOCATION, ENDPOINTS } = require('../../config/weather.config');
+const { CITY, ENDPOINTS } = require('../../config/weather.config');
 
 // FUNCTIONS
 const { logInWithValidCredentials } = require('../functions');
@@ -25,18 +25,14 @@ describe('get weather data', () => {
                 throw new Error(err);
             }
 
-            fetchWeatherData(
-                ENDPOINTS.FORECAST,
-                DEFAULT_LOCATION.LAT,
-                DEFAULT_LOCATION.LNG
-            ).then((res) => {
+            fetchWeatherData(ENDPOINTS.FORECAST, CITY).then((res) => {
                 saveWeatherData(res);
                 done();
             });
         });
     });
 
-    it('returns weather data given specific coordinates w/ auth', (done) => {
+    it('returns weather data given a specific city w/ auth', (done) => {
         logInWithValidCredentials().end((err, res) => {
             if (err) {
                 throw new Error(err);
@@ -45,7 +41,7 @@ describe('get weather data', () => {
             const token = res.body.data.login.token;
 
             const query = `query {
-                weather(lat: ${DEFAULT_LOCATION.LAT}, lng: ${DEFAULT_LOCATION.LNG}) {
+                weather(city: "${CITY}") {
                     temp,
                     description
                 }
@@ -69,7 +65,7 @@ describe('get weather data', () => {
 
     it('attempts to retrieve weather data without auth', (done) => {
         const query = `query {
-            weather(lat: ${DEFAULT_LOCATION.LAT}, lng: ${DEFAULT_LOCATION.LNG}) {
+            weather(city: "${CITY}") {
                 temp,
                 description
             }
@@ -99,7 +95,7 @@ describe('get weather data', () => {
             const token = res.body.data.login.token;
 
             const query = `query {
-                weather(lat: 4.20, lng: 8.24) {
+                weather(city: "Thessaloniki") {
                     temp,
                     description
                 }
@@ -123,11 +119,7 @@ describe('get weather data', () => {
 });
 
 function saveWeatherData(weatherObject) {
-    const name = weatherObject.city.name;
-    const location = {
-        lat: DEFAULT_LOCATION.LAT,
-        lng: DEFAULT_LOCATION.LNG,
-    };
+    const city = weatherObject.city.name;
 
     for (let i = 0; i < 8; i++) {
         const weatherReport = weatherObject.list[i];
@@ -136,8 +128,7 @@ function saveWeatherData(weatherObject) {
             timestamp: weatherReport.dt || 0,
             temp: weatherReport.main.temp || '',
             description: weatherReport.weather[0].description || '',
-            location,
-            name,
+            city,
         });
 
         weather.save();

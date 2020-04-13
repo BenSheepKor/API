@@ -21,7 +21,7 @@ const root = {
 
     // Weather related
     weather: (args, req) => {
-        return WeatherController.getWeatherByCoordinates(args, req);
+        return WeatherController.getWeatherByCityName(args, req);
     },
 
     // Courses related
