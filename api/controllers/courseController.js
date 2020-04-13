@@ -36,13 +36,40 @@ module.exports.create = async (args, req) => {
         if (name && schedule) {
             const { id } = await getUserIdByToken(token);
 
-            const course = new Course({ user_id: id, name, schedule });
+            // check that course has not been registered for specific user
+            const course = await this.checkUserHasCourse(id, name);
+
+            // create if course has not been registered
+            if (!course) {
+                const newCourse = new Course({ user_id: id, name, schedule });
+
+                await newCourse.save();
+
+                return newCourse;
+            }
+
+            course.name = name;
+            course.schedule = [...course.schedule, schedule];
 
             await course.save();
-
             return course;
         }
     }
 
     throw new Error('NO_AUTH');
+};
+
+module.exports.checkUserHasCourse = (userId, courseName) => {
+    if (userId && courseName) {
+        return Course.findOne(
+            { user_id: userId, name: courseName },
+            (err, course) => {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                return course;
+            }
+        );
+    }
 };
