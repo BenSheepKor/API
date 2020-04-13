@@ -33,7 +33,7 @@ module.exports.create = async (args, req) => {
     const token = checkForToken(req);
 
     if (token) {
-        const { name, schedule } = args;
+        const { name, schedule, semester, grade, professor } = args;
 
         if (name && schedule) {
             const { id } = await getUserIdByToken(token);
@@ -43,18 +43,30 @@ module.exports.create = async (args, req) => {
 
             // create if course has not been registered
             if (!course) {
-                const newCourse = new Course({ user_id: id, name, schedule });
+                const newCourse = new Course({
+                    user_id: id,
+                    name,
+                    schedule,
+                    semester,
+                    grade,
+                    professor,
+                });
 
                 await newCourse.save();
 
                 return newCourse;
             }
 
-            course.name = name;
-            course.schedule = [...course.schedule, schedule];
+            const updatedCourse = await updateCourse(
+                course,
+                name,
+                schedule,
+                grade,
+                semester,
+                professor
+            );
 
-            await course.save();
-            return course;
+            return updatedCourse;
         }
     }
 
@@ -91,5 +103,27 @@ const checkUserHasCourse = (userId, courseName) => {
                 return course;
             }
         );
+    }
+};
+
+const updateCourse = async (
+    course,
+    name,
+    schedule,
+    grade,
+    semester,
+    professor
+) => {
+    course.name = name;
+    course.schedule = [...course.schedule, schedule];
+    course.grade = grade || course.grade;
+    course.semester = semester || course.semester;
+    course.professor = professor || course.professor;
+
+    try {
+        await course.save();
+        return course;
+    } catch (e) {
+        throw new Error(e);
     }
 };

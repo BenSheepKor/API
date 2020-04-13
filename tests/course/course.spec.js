@@ -16,6 +16,8 @@ const Course = require('../../api/models/courseModel');
 
 describe('Courses', () => {
     const COURSE_NAME = 'networks';
+    const SEMESTER = 2;
+    const GRADE = 9;
 
     const QUERY = `query {
         myCourses{
@@ -43,8 +45,10 @@ describe('Courses', () => {
                 day: 1,
                 start: 520,
                 end: 660,
-            }) {
-                name
+            }, semester: ${SEMESTER}) {
+                name,
+                semester,
+                grade,
             }
         }`;
 
@@ -83,6 +87,12 @@ describe('Courses', () => {
                             course.should.have
                                 .property('name')
                                 .and.be.equal(COURSE_NAME);
+
+                            course.should.have
+                                .property('semester')
+                                .and.be.equal(SEMESTER);
+
+                            course.should.have.property('grade');
                             done();
                         });
                 });
@@ -144,11 +154,12 @@ describe('Courses', () => {
                 day: 3,
                 start: 520,
                 end: 660,
-            }) {
+            }, grade: ${GRADE}) {
                 name,
                 schedule{
                     day
                 }
+                grade
             }
         }`;
 
@@ -185,6 +196,10 @@ describe('Courses', () => {
                             res.body.data.addCourse.should.have
                                 .property('name')
                                 .and.to.be.equal(COURSE_NAME);
+
+                            res.body.data.addCourse.should.have
+                                .property('grade')
+                                .and.to.be.equal(GRADE);
 
                             res.body.data.addCourse.should.have
                                 .property('schedule')

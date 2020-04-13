@@ -54,7 +54,7 @@ const mutations = `
 type Mutation {
   register(email: String!, password: String!): User,
   login(email: String, username: String, password: String!): JWT,
-  addCourse(name: String!, schedule: ScheduleInput!): Course,
+  addCourse(name: String!, schedule: ScheduleInput, semester: Int, grade: Float, professor: String): Course,
   deleteCourse(name: String!): Boolean
 },`;
 
