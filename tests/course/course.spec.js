@@ -15,8 +15,6 @@ const { logInWithValidCredentials } = require('../functions');
 const Course = require('../../api/models/courseModel');
 
 describe('Courses', () => {
-    // we delete all users and create just one during the test suite. We are confident that said user will have id = 1;
-    const USER_ID = 1;
     const COURSE_NAME = 'networks';
 
     const QUERY = `query {
