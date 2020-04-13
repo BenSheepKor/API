@@ -3,16 +3,18 @@
 const Course = require('../models/courseModel');
 const { checkForToken, getUserIdByToken } = require('../../global/functions');
 
-module.exports.get = (args, req) => {
+/**
+ * Callback function for courses query
+ */
+module.exports.get = async (args, req) => {
     // check for auth token
     const token = checkForToken(req);
 
     if (token) {
         // get user id from query arguments
-        const { userId } = args;
-
-        if (userId) {
-            return Course.find({ user_id: userId }, (err, res) => {
+        const { id } = await getUserIdByToken(token);
+        if (id) {
+            return Course.find({ user_id: id }, (err, res) => {
                 if (err) {
                     throw new Error();
                 }

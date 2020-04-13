@@ -25,7 +25,7 @@ const root = {
     },
 
     // Courses related
-    courses: (args, req) => {
+    myCourses: (args, req) => {
         return CourseController.get(args, req);
     },
     addCourse: (args, req) => {

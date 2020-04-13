@@ -20,7 +20,7 @@ describe('Courses', () => {
     const COURSE_NAME = 'networks';
 
     const QUERY = `query {
-        courses(userId: ${USER_ID}) {
+        myCourses{
             name,
             schedule {
                 day
@@ -121,9 +121,9 @@ describe('Courses', () => {
                                 throw new Error(err);
                             }
 
-                            const course = res.body.data.courses[0];
+                            const course = res.body.data.myCourses[0];
 
-                            res.body.data.courses.should.be.a('array');
+                            res.body.data.myCourses.should.be.a('array');
                             course.should.have.property('name');
                             course.name.should.equal(COURSE_NAME);
 
