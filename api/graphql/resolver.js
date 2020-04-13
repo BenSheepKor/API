@@ -26,7 +26,10 @@ const root = {
 
     // Courses related
     courses: (args, req) => {
-        return CourseController.courses(args, req);
+        return CourseController.get(args, req);
+    },
+    addCourse: (args, req) => {
+        return CourseController.create(args, req);
     },
 };
 

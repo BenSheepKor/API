@@ -14,7 +14,7 @@ const request = require('supertest')(url);
 const { logInWithValidCredentials } = require('../functions');
 const Course = require('../../api/models/courseModel');
 
-describe('get my courses', () => {
+describe('Courses', () => {
     // we delete all users and create just one during the test suite. We are confident that said user will have id = 1;
     const USER_ID = 1;
     const COURSE_NAME = 'networks';
@@ -96,6 +96,44 @@ describe('get my courses', () => {
                     .and.to.be.equal(401);
                 done();
             });
+    });
+
+    it('adds a course for a user', (done) => {
+        const query = `mutation {
+            addCourse(name: "${COURSE_NAME}", schedule: {
+                day: 1,
+                start: 520,
+                end: 660,
+            }) {
+                name
+            }
+        }`;
+
+        logInWithValidCredentials().end((err, res) => {
+            if (err) {
+                throw new Error(err);
+            }
+
+            const token = res.body.data.login.token;
+
+            request
+                .post('/graphql')
+                .send({ query })
+                .set('Authorization', 'Bearer ' + token)
+                .expect(200)
+                .end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    const course = res.body.data.addCourse;
+
+                    course.should.have
+                        .property('name')
+                        .and.be.equal(COURSE_NAME);
+                    done();
+                });
+        });
     });
 });
 

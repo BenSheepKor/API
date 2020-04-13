@@ -1,9 +1,9 @@
 'use strict';
 
 const Course = require('../models/courseModel');
-const { checkForToken } = require('../../global/functions');
+const { checkForToken, getUserIdByToken } = require('../../global/functions');
 
-module.exports.courses = (args, req) => {
+module.exports.get = (args, req) => {
     // check for auth token
     const token = checkForToken(req);
 
@@ -21,6 +21,26 @@ module.exports.courses = (args, req) => {
                     return res;
                 }
             });
+        }
+    }
+
+    throw new Error('NO_AUTH');
+};
+
+module.exports.create = async (args, req) => {
+    const token = checkForToken(req);
+
+    if (token) {
+        const { name, schedule } = args;
+
+        if (name && schedule) {
+            const { id } = await getUserIdByToken(token);
+
+            const course = new Course({ user_id: id, name, schedule });
+
+            await course.save();
+
+            return course;
         }
     }
 
