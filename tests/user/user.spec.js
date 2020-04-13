@@ -216,43 +216,14 @@ describe('login user', () => {
  * Test for me query endpoint
  */
 
-describe('get user information /me', () => {
-    it('sends a request to me query with correct auth token', (done) => {
+describe('/me', () => {
+    it('retrieve user information', (done) => {
         const query = `query {
             me {
                 email,
             }
         }`;
 
-        logInWithValidCredentials().end((err, res) => {
-            if (err) {
-                return done(err);
-            }
-            const token = res.body.data.login.token;
-
-            request
-                .post('/graphql')
-                .send({ query })
-                .set('Authorization', 'Bearer ' + token)
-                .expect(200)
-                .end((err, res) => {
-                    if (err) {
-                        return done(err);
-                    }
-
-                    res.body.data.me.should.have.property('email');
-                    done();
-                });
-        });
-    });
-});
-
-/**
- * Test for me query endpoint without authentication
- */
-
-describe('get user information /me', () => {
-    it('sends a request to me query with an incorrect auth token', (done) => {
         request
             .post('/graphql')
             .send({
@@ -268,7 +239,27 @@ describe('get user information /me', () => {
                 res.body.errors[0].should.have
                     .property('status')
                     .and.to.be.equal(401);
-                done();
+
+                logInWithValidCredentials().end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+                    const token = res.body.data.login.token;
+
+                    request
+                        .post('/graphql')
+                        .send({ query })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                return done(err);
+                            }
+
+                            res.body.data.me.should.have.property('email');
+                            done();
+                        });
+                });
             });
     });
 });

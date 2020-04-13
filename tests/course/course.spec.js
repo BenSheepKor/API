@@ -47,41 +47,6 @@ describe('Courses', () => {
     });
 
     it("retrieves a list of the user's courses", (done) => {
-        logInWithValidCredentials().end((err, res) => {
-            if (err) {
-                throw new Error(err);
-            }
-
-            const token = res.body.data.login.token;
-            request
-                .post('/graphql')
-                .send({ query: QUERY })
-                .set('Authorization', 'Bearer ' + token)
-                .expect(200)
-                .end((err, res) => {
-                    if (err) {
-                        throw new Error(err);
-                    }
-
-                    const course = res.body.data.courses[0];
-
-                    res.body.data.courses.should.be.a('array');
-                    course.should.have.property('name');
-                    course.name.should.equal(COURSE_NAME);
-
-                    // in js array of objects is of type object
-                    course.should.have
-                        .property('schedule')
-                        .and.should.be.a('object');
-
-                    const schedule = course.schedule[0];
-                    schedule.should.have.keys('day', 'start');
-                    done();
-                });
-        });
-    });
-
-    it("attempts to retrieve user's courses without auth", (done) => {
         request
             .post('/graphql')
             .send({ query: QUERY })
@@ -94,7 +59,39 @@ describe('Courses', () => {
                 res.body.errors[0].should.have
                     .property('status')
                     .and.to.be.equal(401);
-                done();
+
+                logInWithValidCredentials().end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    const token = res.body.data.login.token;
+                    request
+                        .post('/graphql')
+                        .send({ query: QUERY })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                throw new Error(err);
+                            }
+
+                            const course = res.body.data.courses[0];
+
+                            res.body.data.courses.should.be.a('array');
+                            course.should.have.property('name');
+                            course.name.should.equal(COURSE_NAME);
+
+                            // in js array of objects is of type object
+                            course.should.have
+                                .property('schedule')
+                                .and.should.be.a('object');
+
+                            const schedule = course.schedule[0];
+                            schedule.should.have.keys('day', 'start');
+                            done();
+                        });
+                });
             });
     });
 
@@ -109,31 +106,45 @@ describe('Courses', () => {
             }
         }`;
 
-        logInWithValidCredentials().end((err, res) => {
-            if (err) {
-                throw new Error(err);
-            }
+        request
+            .post('/graphql')
+            .send({ query })
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    throw new Error(err);
+                }
 
-            const token = res.body.data.login.token;
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(401);
 
-            request
-                .post('/graphql')
-                .send({ query })
-                .set('Authorization', 'Bearer ' + token)
-                .expect(200)
-                .end((err, res) => {
+                logInWithValidCredentials().end((err, res) => {
                     if (err) {
                         throw new Error(err);
                     }
 
-                    const course = res.body.data.addCourse;
+                    const token = res.body.data.login.token;
 
-                    course.should.have
-                        .property('name')
-                        .and.be.equal(COURSE_NAME);
-                    done();
+                    request
+                        .post('/graphql')
+                        .send({ query })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                throw new Error(err);
+                            }
+
+                            const course = res.body.data.addCourse;
+
+                            course.should.have
+                                .property('name')
+                                .and.be.equal(COURSE_NAME);
+                            done();
+                        });
                 });
-        });
+            });
     });
 });
 
