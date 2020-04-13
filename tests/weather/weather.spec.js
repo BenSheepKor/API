@@ -32,7 +32,7 @@ describe('get weather data', () => {
         });
     });
 
-    it('returns weather data given a specific city w/ auth', (done) => {
+    it('returns weather data given a specific city', (done) => {
         logInWithValidCredentials().end((err, res) => {
             if (err) {
                 throw new Error(err);
@@ -46,26 +46,42 @@ describe('get weather data', () => {
                     description
                 }
             }`;
+
             request
                 .post('/graphql')
                 .send({ query })
-                .set('Authorization', 'Bearer ' + token)
                 .expect(200)
                 .end((err, res) => {
                     if (err) {
                         return done(err);
                     }
+                    res.body.errors[0].should.have
+                        .property('status')
+                        .and.to.be.equal(401);
 
-                    res.body.data.weather.should.have.property('temp');
-                    res.body.data.weather.should.have.property('description');
-                    done();
+                    request
+                        .post('/graphql')
+                        .send({ query })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                return done(err);
+                            }
+
+                            res.body.data.weather.should.have.property('temp');
+                            res.body.data.weather.should.have.property(
+                                'description'
+                            );
+                            done();
+                        });
                 });
         });
     });
 
-    it('attempts to retrieve weather data without auth', (done) => {
+    it('retrieves weather data given coordinates are not stored in the database', (done) => {
         const query = `query {
-            weather(city: "${CITY}") {
+            weather(city: "Thessaloniki") {
                 temp,
                 description
             }
@@ -82,39 +98,32 @@ describe('get weather data', () => {
                 res.body.errors[0].should.have
                     .property('status')
                     .and.to.be.equal(401);
-                done();
-            });
-    });
 
-    it('retrieves weather data given coordinates are not stored in the database', (done) => {
-        logInWithValidCredentials().end((err, res) => {
-            if (err) {
-                throw new Error(err);
-            }
-
-            const token = res.body.data.login.token;
-
-            const query = `query {
-                weather(city: "Thessaloniki") {
-                    temp,
-                    description
-                }
-            }`;
-            request
-                .post('/graphql')
-                .send({ query })
-                .set('Authorization', 'Bearer ' + token)
-                .expect(200)
-                .end((err, res) => {
+                logInWithValidCredentials().end((err, res) => {
                     if (err) {
-                        return done(err);
+                        throw new Error(err);
                     }
 
-                    res.body.data.weather.should.have.property('temp');
-                    res.body.data.weather.should.have.property('description');
-                    done();
+                    const token = res.body.data.login.token;
+
+                    request
+                        .post('/graphql')
+                        .send({ query })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                return done(err);
+                            }
+
+                            res.body.data.weather.should.have.property('temp');
+                            res.body.data.weather.should.have.property(
+                                'description'
+                            );
+                            done();
+                        });
                 });
-        });
+            });
     });
 });
 

@@ -26,6 +26,23 @@ module.exports.checkForToken = (req) => {
 };
 
 /**
+ * Function that retruns the user id associated with the JWT token passed in
+ * @param {JWT} token The JWT token of the user
+ * @returns {int} The user id
+ */
+module.exports.getUserIdByToken = (token) => {
+    if (token) {
+        return User.findOne({ token }, { id: 1 }, (err, user) => {
+            if (err) {
+                throw new Error(err);
+            }
+
+            return user.id;
+        });
+    }
+};
+
+/**
  * Function that runs the token in the database to find a user related to it
  * @param {String} token The JWT send in the request
  * @returns {Boolean}  Wethere the token relates to a register user or not

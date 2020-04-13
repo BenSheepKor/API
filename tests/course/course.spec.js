@@ -14,25 +14,11 @@ const request = require('supertest')(url);
 const { logInWithValidCredentials } = require('../functions');
 const Course = require('../../api/models/courseModel');
 
-describe('get my courses', () => {
-    // we delete all users and create just one during the test suite. We are confident that said user will have id = 1;
-    const USER_ID = 1;
+describe('Courses', () => {
     const COURSE_NAME = 'networks';
-    const SCHEDULE = [
-        {
-            day: 1,
-            start: 520,
-            end: 660,
-        },
-        {
-            day: 3,
-            start: 520,
-            end: 660,
-        },
-    ];
 
     const QUERY = `query {
-        courses(userId: ${USER_ID}) {
+        myCourses{
             name,
             schedule {
                 day
@@ -41,47 +27,69 @@ describe('get my courses', () => {
         }
     }`;
 
-    before('create course for user', async (done) => {
-        createCourse(USER_ID, COURSE_NAME, SCHEDULE);
-        done();
-    });
-
-    it("retrieves a list of the user's courses", (done) => {
-        logInWithValidCredentials().end((err, res) => {
+    before('Delete any courses that might exists', (done) => {
+        Course.deleteMany({}, (err) => {
             if (err) {
                 throw new Error(err);
             }
 
-            const token = res.body.data.login.token;
-            request
-                .post('/graphql')
-                .send({ query: QUERY })
-                .set('Authorization', 'Bearer ' + token)
-                .expect(200)
-                .end((err, res) => {
+            done();
+        });
+    });
+
+    it('adds a course for a user', (done) => {
+        const query = `mutation {
+            addCourse(name: "${COURSE_NAME}", schedule: {
+                day: 1,
+                start: 520,
+                end: 660,
+            }) {
+                name
+            }
+        }`;
+
+        request
+            .post('/graphql')
+            .send({ query })
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(401);
+
+                logInWithValidCredentials().end((err, res) => {
                     if (err) {
                         throw new Error(err);
                     }
 
-                    const course = res.body.data.courses[0];
+                    const token = res.body.data.login.token;
 
-                    res.body.data.courses.should.be.a('array');
-                    course.should.have.property('name');
-                    course.name.should.equal(COURSE_NAME);
+                    request
+                        .post('/graphql')
+                        .send({ query })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                throw new Error(err);
+                            }
 
-                    // in js array of objects is of type object
-                    course.should.have
-                        .property('schedule')
-                        .and.should.be.a('object');
+                            const course = res.body.data.addCourse;
 
-                    const schedule = course.schedule[0];
-                    schedule.should.have.keys('day', 'start');
-                    done();
+                            course.should.have
+                                .property('name')
+                                .and.be.equal(COURSE_NAME);
+                            done();
+                        });
                 });
-        });
+            });
     });
 
-    it("attempts to retrieve user's courses without auth", (done) => {
+    it("retrieves a list of the user's courses", (done) => {
         request
             .post('/graphql')
             .send({ query: QUERY })
@@ -94,27 +102,138 @@ describe('get my courses', () => {
                 res.body.errors[0].should.have
                     .property('status')
                     .and.to.be.equal(401);
-                done();
+
+                logInWithValidCredentials().end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    const token = res.body.data.login.token;
+                    request
+                        .post('/graphql')
+                        .send({ query: QUERY })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                throw new Error(err);
+                            }
+
+                            const course = res.body.data.myCourses[0];
+
+                            res.body.data.myCourses.should.be.a('array');
+                            course.should.have.property('name');
+                            course.name.should.equal(COURSE_NAME);
+
+                            // in js array of objects is of type object
+                            course.should.have
+                                .property('schedule')
+                                .and.should.be.a('object');
+
+                            const schedule = course.schedule[0];
+                            schedule.should.have.keys('day', 'start');
+                            done();
+                        });
+                });
+            });
+    });
+
+    it('modifies a course for a user', (done) => {
+        const query = `mutation {
+            addCourse(name: "${COURSE_NAME}", schedule: {
+                day: 3,
+                start: 520,
+                end: 660,
+            }) {
+                name,
+                schedule{
+                    day
+                }
+            }
+        }`;
+
+        request
+            .post('/graphql')
+            .send({ query })
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(401);
+
+                logInWithValidCredentials().end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    const token = res.body.data.login.token;
+
+                    request
+                        .post('/graphql')
+                        .send({ query })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                throw new Error(err);
+                            }
+
+                            res.body.data.addCourse.should.have
+                                .property('name')
+                                .and.to.be.equal(COURSE_NAME);
+
+                            res.body.data.addCourse.should.have
+                                .property('schedule')
+                                .and.to.be.a('array')
+                                .and.have.lengthOf(2);
+                            done();
+                        });
+                });
+            });
+    });
+
+    it('deletes a course for a user', (done) => {
+        const query = `mutation {
+            deleteCourse(name: "${COURSE_NAME}")
+        }`;
+
+        request
+            .post('/graphql')
+            .send({ query })
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(401);
+
+                logInWithValidCredentials().end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    const token = res.body.data.login.token;
+                    request
+                        .post('/graphql')
+                        .send({ query })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                throw new Error(err);
+                            }
+
+                            res.body.data.deleteCourse.should.equal(true);
+                            done();
+                        });
+                });
             });
     });
 });
-
-const createCourse = async (userId, courseName, courseSchedule) => {
-    const course = new Course({
-        user_id: userId,
-        name: courseName,
-        schedule: courseSchedule,
-    });
-
-    await deleteCourses();
-
-    return await course.save();
-};
-
-const deleteCourses = async () => {
-    return Course.deleteMany({}, (err) => {
-        if (err) {
-            throw new Error(err);
-        }
-    });
-};
