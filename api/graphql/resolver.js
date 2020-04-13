@@ -31,6 +31,9 @@ const root = {
     addCourse: (args, req) => {
         return CourseController.create(args, req);
     },
+    deleteCourse: (args, req) => {
+        return CourseController.delete(args, req);
+    },
 };
 
 // export the resolver

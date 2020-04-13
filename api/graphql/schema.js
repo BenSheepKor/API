@@ -54,7 +54,8 @@ const mutations = `
 type Mutation {
   register(email: String!, password: String!): User,
   login(email: String, username: String, password: String!): JWT,
-  addCourse(name: String!, schedule: ScheduleInput!): Course
+  addCourse(name: String!, schedule: ScheduleInput!): Course,
+  deleteCourse(name: String!): Boolean
 },`;
 
 // Define the schema. In order to make sense of what is going on please see https://graphql.org/learn/schema/

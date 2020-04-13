@@ -39,7 +39,7 @@ module.exports.create = async (args, req) => {
             const { id } = await getUserIdByToken(token);
 
             // check that course has not been registered for specific user
-            const course = await this.checkUserHasCourse(id, name);
+            const course = await checkUserHasCourse(id, name);
 
             // create if course has not been registered
             if (!course) {
@@ -61,7 +61,25 @@ module.exports.create = async (args, req) => {
     throw new Error('NO_AUTH');
 };
 
-module.exports.checkUserHasCourse = (userId, courseName) => {
+module.exports.delete = async (args, req) => {
+    const token = checkForToken(req);
+
+    if (token) {
+        const { name } = args;
+
+        if (name) {
+            const { id } = await getUserIdByToken(token);
+
+            await Course.deleteOne({ user_id: id, name });
+
+            return true;
+        }
+    }
+
+    throw new Error('NO_AUTH');
+};
+
+const checkUserHasCourse = (userId, courseName) => {
     if (userId && courseName) {
         return Course.findOne(
             { user_id: userId, name: courseName },

@@ -197,4 +197,45 @@ describe('Courses', () => {
                 });
             });
     });
+
+    it('deletes a course for a user', (done) => {
+        const query = `mutation {
+            deleteCourse(name: "${COURSE_NAME}")
+        }`;
+
+        request
+            .post('/graphql')
+            .send({ query })
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(401);
+
+                logInWithValidCredentials().end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    const token = res.body.data.login.token;
+                    request
+                        .post('/graphql')
+                        .send({ query })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                throw new Error(err);
+                            }
+
+                            res.body.data.deleteCourse.should.equal(true);
+                            done();
+                        });
+                });
+            });
+    });
 });
