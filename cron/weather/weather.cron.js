@@ -1,7 +1,7 @@
 // package to set up cron jobs
 const cron = require('node-cron');
 const axios = require('../../global/axios');
-const { DEFAULT_LOCATION, ENDPOINTS } = require('../../config/weather.config');
+const { ENDPOINTS } = require('../../config/weather.config');
 
 // get access to the weather model so we can create an instance
 const Weather = require('../../api/models/weatherModel');
