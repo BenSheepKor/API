@@ -3,14 +3,15 @@
 // Get mongoose to connect with the mongodb database
 const mongoose = require('mongoose');
 
-// Get the User model
-const User = mongoose.model('User');
-
 // Get bcrypt for password hasing and salt generation
 const bcrypt = require('bcrypt');
 
 // JWT package for Node
 const nJwt = require('njwt');
+
+// Get models
+const User = require('../models/userModel');
+const Faculty = require('../models/facultyModel');
 
 // configuration file for JWT
 const jwtConfigs = require('../jwt/config.dev');
@@ -173,6 +174,35 @@ exports.login = async (req) => {
     }
 
     throw new Error('INCORRECT_PASSWORD');
+};
+
+exports.update = async (args, req) => {
+    const token = checkForToken(req);
+
+    if (token) {
+        const user = await isAuthorized(token);
+        if (user) {
+            const { username, password, facultyId } = args;
+
+            if (username) {
+                user.username = username;
+            }
+
+            if (password) {
+                user.password = password;
+            }
+
+            if (facultyId) {
+                user.faculty_id = mongoose.Types.ObjectId(facultyId);
+            }
+
+            await user.save();
+
+            return user;
+        }
+    }
+
+    throw new Error('NO_AUTH');
 };
 
 /**

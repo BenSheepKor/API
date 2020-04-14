@@ -18,6 +18,9 @@ const root = {
     login: (args) => {
         return UserController.login(args);
     },
+    newMe: (args, req) => {
+        return UserController.update(args, req);
+    },
 
     // Weather related
     weather: (args, req) => {
