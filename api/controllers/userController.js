@@ -11,7 +11,6 @@ const nJwt = require('njwt');
 
 // Get models
 const User = require('../models/userModel');
-const Faculty = require('../models/facultyModel');
 
 // configuration file for JWT
 const jwtConfigs = require('../jwt/config.dev');

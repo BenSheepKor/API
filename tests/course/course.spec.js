@@ -5,7 +5,6 @@ const chai = require('chai');
 const config = require('../../config');
 // eslint-disable-next-line no-unused-vars
 const should = chai.should();
-const expect = chai.expect;
 
 // get the dev api url
 const url = config.dev.url;
