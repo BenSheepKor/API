@@ -38,55 +38,7 @@ describe('Courses', () => {
     });
 
     it('adds a course for a user', (done) => {
-        const query = `mutation {
-            addCourse(name: "${COURSE_NAME}", schedule: {
-                day: 1,
-                start: 520,
-                end: 660,
-            }) {
-                name
-            }
-        }`;
-
-        request
-            .post('/graphql')
-            .send({ query })
-            .expect(200)
-            .end((err, res) => {
-                if (err) {
-                    throw new Error(err);
-                }
-
-                res.body.errors[0].should.have
-                    .property('status')
-                    .and.to.be.equal(401);
-
-                logInWithValidCredentials().end((err, res) => {
-                    if (err) {
-                        throw new Error(err);
-                    }
-
-                    const token = res.body.data.login.token;
-
-                    request
-                        .post('/graphql')
-                        .send({ query })
-                        .set('Authorization', 'Bearer ' + token)
-                        .expect(200)
-                        .end((err, res) => {
-                            if (err) {
-                                throw new Error(err);
-                            }
-
-                            const course = res.body.data.addCourse;
-
-                            course.should.have
-                                .property('name')
-                                .and.be.equal(COURSE_NAME);
-                            done();
-                        });
-                });
-            });
+        addCourse(done);
     });
 
     it("retrieves a list of the user's courses", (done) => {
@@ -196,6 +148,10 @@ describe('Courses', () => {
             });
     });
 
+    after('adds course after deletion so we have data to work with', (done) => {
+        addCourse(done);
+    });
+
     it('deletes a course for a user', (done) => {
         const query = `mutation {
             deleteCourse(name: "${COURSE_NAME}")
@@ -236,4 +192,56 @@ describe('Courses', () => {
                 });
             });
     });
+
+    const addCourse = (done) => {
+        const query = `mutation {
+            addCourse(name: "${COURSE_NAME}", schedule: {
+                day: 1,
+                start: 520,
+                end: 660,
+            }) {
+                name
+            }
+        }`;
+
+        request
+            .post('/graphql')
+            .send({ query })
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(401);
+
+                logInWithValidCredentials().end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    const token = res.body.data.login.token;
+
+                    request
+                        .post('/graphql')
+                        .send({ query })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                throw new Error(err);
+                            }
+
+                            const course = res.body.data.addCourse;
+
+                            course.should.have
+                                .property('name')
+                                .and.be.equal(COURSE_NAME);
+                            done();
+                        });
+                });
+            });
+    };
 });
