@@ -88,6 +88,8 @@ module.exports.update = async (args, req) => {
 
                 return updatedCourse;
             }
+
+            throw new Error('COURSE_DOES_NOT_EXIST');
         }
     }
 

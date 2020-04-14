@@ -16,7 +16,10 @@ const Course = require('../../api/models/courseModel');
 
 const { logInWithValidCredentials } = require('../functions');
 
-const { DUPLICATE_COURSE } = require('../../api/errors/errorKeys');
+const {
+    DUPLICATE_COURSE,
+    COURSE_DOES_NOT_EXIST,
+} = require('../../api/errors/errorKeys');
 
 describe('Courses', () => {
     const COURSE_NAME = 'networks';
@@ -188,6 +191,61 @@ describe('Courses', () => {
                     done();
                 });
         });
+    });
+
+    it('attempts to update a course that does not exist but fails', (done) => {
+        const query = `mutation {
+            updateCourse(name: "${COURSE_NAME}_not_existing", schedule: {
+                day: 3,
+                start: 520,
+                end: 660,
+            }) {
+                name,
+                schedule{
+                    day
+                }
+            }
+        }`;
+
+        request
+            .post('/graphql')
+            .send({ query })
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(401);
+
+                logInWithValidCredentials().end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    const token = res.body.data.login.token;
+
+                    request
+                        .post('/graphql')
+                        .send({ query })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                throw new Error(err);
+                            }
+
+                            const error = res.body.errors[0];
+
+                            error.should.have
+                                .property('status')
+                                .and.to.be.equal(COURSE_DOES_NOT_EXIST.status);
+                            done();
+                        });
+                });
+            });
     });
 
     after('adds course after deletion so we have data to work with', (done) => {
