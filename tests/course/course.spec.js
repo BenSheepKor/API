@@ -5,14 +5,18 @@ const chai = require('chai');
 const config = require('../../config');
 // eslint-disable-next-line no-unused-vars
 const should = chai.should();
+const expect = chai.expect;
 
 // get the dev api url
 const url = config.dev.url;
 // testing framework for HTTP requests
 const request = require('supertest')(url);
 
-const { logInWithValidCredentials } = require('../functions');
 const Course = require('../../api/models/courseModel');
+
+const { logInWithValidCredentials } = require('../functions');
+
+const { DUPLICATE_COURSE } = require('../../api/errors/errorKeys');
 
 describe('Courses', () => {
     const COURSE_NAME = 'networks';
@@ -90,9 +94,9 @@ describe('Courses', () => {
             });
     });
 
-    it('modifies a course for a user', (done) => {
+    it('updates a course for a user', (done) => {
         const query = `mutation {
-            addCourse(name: "${COURSE_NAME}", schedule: {
+            updateCourse(name: "${COURSE_NAME}", schedule: {
                 day: 3,
                 start: 520,
                 end: 660,
@@ -134,11 +138,11 @@ describe('Courses', () => {
                                 throw new Error(err);
                             }
 
-                            res.body.data.addCourse.should.have
+                            res.body.data.updateCourse.should.have
                                 .property('name')
                                 .and.to.be.equal(COURSE_NAME);
 
-                            res.body.data.addCourse.should.have
+                            res.body.data.updateCourse.should.have
                                 .property('schedule')
                                 .and.to.be.a('array')
                                 .and.have.lengthOf(2);
@@ -146,6 +150,44 @@ describe('Courses', () => {
                         });
                 });
             });
+    });
+
+    it('attemps to create a course that already exists and fails', (done) => {
+        const query = `mutation {
+            addCourse(name: "${COURSE_NAME}", schedule: {
+                day: 1,
+                start: 520,
+                end: 660,
+            }) {
+                name
+            }
+        }`;
+
+        logInWithValidCredentials().end((err, res) => {
+            if (err) {
+                throw new Error(err);
+            }
+
+            const token = res.body.data.login.token;
+
+            request
+                .post('/graphql')
+                .send({ query })
+                .set('Authorization', 'Bearer ' + token)
+                .expect(200)
+                .end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    const error = res.body.errors[0];
+
+                    error.should.have
+                        .property('status')
+                        .and.to.be.equal(DUPLICATE_COURSE.status);
+                    done();
+                });
+        });
     });
 
     after('adds course after deletion so we have data to work with', (done) => {

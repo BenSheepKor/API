@@ -34,6 +34,9 @@ const root = {
     addCourse: (args, req) => {
         return CourseController.create(args, req);
     },
+    updateCourse: (args, req) => {
+        return CourseController.update(args, req);
+    },
     deleteCourse: (args, req) => {
         return CourseController.delete(args, req);
     },
