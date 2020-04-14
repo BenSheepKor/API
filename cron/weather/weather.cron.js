@@ -27,7 +27,7 @@ Location.find({}, (err, locations) => {
     if (locations.length) {
         locations.forEach((location) => {
             // Set up a cron job every 3 hours of each different city
-            const cron = new CronJob('* */3 * * *', () => {
+            const cron = new CronJob('0 0 */3 * * *', () => {
                 this.weatherCronJob(location.name);
             });
             cron.start();
