@@ -26,12 +26,12 @@
     "body-parse": "^0.1.0",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
+    "cron": "^1.8.2",
     "express": "^4.17.1",
     "express-graphql": "^0.9.0",
     "graphql": "^14.6.0",
     "mongoose": "^5.9.3",
     "njwt": "^1.0.0",
-    "node-cron": "^2.0.3",
     "secure-random": "^1.1.2"
   }
 }

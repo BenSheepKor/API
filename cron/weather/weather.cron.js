@@ -1,5 +1,5 @@
 // package to set up cron jobs
-const cron = require('node-cron');
+const CronJob = require('cron').CronJob;
 const axios = require('../../global/axios');
 const { ENDPOINTS } = require('../../config/weather.config');
 
@@ -25,7 +25,7 @@ Location.find({}, (err, locations) => {
     if (locations.length) {
         locations.forEach(async (location) => {
             // Set up a cron job every 3 hours of each different city
-            cron.schedule('0 */3 * * *', async () => {
+            const cron = new CronJob('* */3 * * *', async () => {
                 /**
                  * Delete data. No prior timestamp data wanted during dev. Might change after alpha
                  *
@@ -45,6 +45,7 @@ Location.find({}, (err, locations) => {
                     }
                 );
             });
+            cron.start();
         });
     }
 });
