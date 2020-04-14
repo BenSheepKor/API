@@ -4,11 +4,14 @@ mongoose.connect('mongodb://localhost/BenSheep');
 const chai = require('chai');
 // eslint-disable-next-line no-unused-vars
 const should = chai.should();
+const expect = chai.expect;
 
 // get the dev api url
 const { dev } = require('../../config');
 // testing framework for HTTP requests
 const request = require('supertest')(dev.url);
+
+const { TEST_SUITE_SOURCE } = require('../../global/messages');
 
 const Weather = require('../../api/models/weatherModel');
 
@@ -17,6 +20,9 @@ const { CITY, ENDPOINTS } = require('../../config/weather.config');
 // FUNCTIONS
 const { logInWithValidCredentials } = require('../functions');
 const { fetchWeatherData } = require('../../global/functions');
+
+// Weather cron job
+const { weatherCronJob } = require('../../cron/weather/weather.cron');
 
 describe('get weather data', () => {
     before((done) => {
@@ -124,6 +130,15 @@ describe('get weather data', () => {
                         });
                 });
             });
+    });
+});
+
+describe('Weather cron', () => {
+    it('ensures that the weather cron works just fine', async () => {
+        const result = await weatherCronJob(CITY, TEST_SUITE_SOURCE);
+        expect(result)
+            .to.have.property('content')
+            .and.to.have.string(`${CITY} weather data`);
     });
 });
 

@@ -1,7 +1,9 @@
 // package to set up cron jobs
 const CronJob = require('cron').CronJob;
+
 const axios = require('../../global/axios');
 const { ENDPOINTS } = require('../../config/weather.config');
+const { TEST_SUITE_SOURCE } = require('../../global/messages');
 
 // get access to the weather model so we can create an instance
 const Weather = require('../../api/models/weatherModel');
@@ -23,27 +25,10 @@ Location.find({}, (err, locations) => {
     }
 
     if (locations.length) {
-        locations.forEach(async (location) => {
+        locations.forEach((location) => {
             // Set up a cron job every 3 hours of each different city
-            const cron = new CronJob('* */3 * * *', async () => {
-                /**
-                 * Delete data. No prior timestamp data wanted during dev. Might change after alpha
-                 *
-                 * @see deleteWeatherData
-                 */
-
-                await deleteWeatherData(location.name);
-
-                // shot the request to the open weather API
-                fetchWeatherData(ENDPOINTS.FORECAST, location.name).then(
-                    async (res) => {
-                        // save data
-                        const success = await prepareAndSave(res);
-
-                        // use discord bot. Used during dev for debugging purposes
-                        notifyDiscordChannel(success, location.name);
-                    }
-                );
+            const cron = new CronJob('* */3 * * *', () => {
+                this.weatherCronJob(location.name);
             });
             cron.start();
         });
@@ -108,13 +93,20 @@ async function prepareAndSave(weatherObj) {
 /**
  * Function that sends a message to a discord channel that lets us know the state of the weather cron job
  *
- * @param {Boolean} success Determined by if all weather data are succesfully stored in the dabase
+ * @param {boolean} success Determined by if all weather data are succesfully stored in the dabase
+ * @param {boolean} location The location the weather data was for
+ * @param {string} source The source of the call. Defaults to empty string and is hardcoded 'TEST' for test suites
  */
-function notifyDiscordChannel(success, city) {
+function notifyDiscordChannel(success, city, source = '') {
     let content = `${city} weather data fetched at ${new Date()}`;
 
     if (!success) {
         content = 'Something went wrong';
+    }
+
+    if (source !== '' && source === TEST_SUITE_SOURCE) {
+        content += ` | ${source}`;
+        return { content };
     }
 
     const body = { content };
@@ -124,10 +116,8 @@ function notifyDiscordChannel(success, city) {
             'https://discordapp.com/api/webhooks/691348810835820595/TpPlu4t_78e_g4de7r00noLKpBEUbu3fZJS0rP3DzaoXyGYFofGF6qiNb4-_eXc8HsIu',
             body
         )
-        .then(() => {
-            // do nothing
-        })
         .catch((err) => {
+            console.log('OK');
             // do nothing
             throw new Error(err);
         });
@@ -149,3 +139,26 @@ function deleteWeatherData(city) {
         return res;
     });
 }
+
+/**
+ * Function that runs every 3 hours. Deletes all weather data for a specific location and then fetches new. Notifies discord channel
+ * Function is being exported so it can be called during testing
+ */
+module.exports.weatherCronJob = async (location, source = '') => {
+    /**
+     * Delete data. No prior timestamp data wanted during dev. Might change after alpha
+     *
+     * @see deleteWeatherData
+     */
+
+    await deleteWeatherData(location);
+
+    // shot the request to the open weather API
+    return fetchWeatherData(ENDPOINTS.FORECAST, location).then(async (res) => {
+        // save data
+        const success = await prepareAndSave(res);
+
+        // use discord bot. Used during dev for debugging purposes
+        return notifyDiscordChannel(success, location, source);
+    });
+};
