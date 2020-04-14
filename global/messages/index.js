@@ -3,4 +3,7 @@
  */
 module.exports = Object.freeze({
     TEST_SUITE_SOURCE: 'TEST',
+    TEST_USER_EMAIL: 'test@mocha.com',
+    TEST_USER_PASSWORD: 'safepassword123',
+    TEST_USERNAME: 'test_mocha',
 });

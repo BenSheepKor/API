@@ -117,7 +117,6 @@ function notifyDiscordChannel(success, city, source = '') {
             body
         )
         .catch((err) => {
-            console.log('OK');
             // do nothing
             throw new Error(err);
         });

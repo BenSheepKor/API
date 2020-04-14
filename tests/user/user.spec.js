@@ -11,6 +11,8 @@ const url = config.dev.url;
 // testing framework for HTTP requests
 const request = require('supertest')(url);
 
+const { TEST_USER_EMAIL, TEST_USERNAME } = require('../../global/messages');
+
 const { logInWithValidCredentials } = require('../functions');
 const User = require('../../api/models/userModel');
 
@@ -20,7 +22,7 @@ const User = require('../../api/models/userModel');
 
 describe('register user', () => {
     before((done) => {
-        User.findOneAndDelete({ email: 'test@mocha.com' }).then(() => {
+        User.findOneAndDelete({ email: TEST_USER_EMAIL }).then(() => {
             done();
         });
     });
@@ -47,13 +49,7 @@ describe('register user', () => {
                 done();
             });
     });
-});
 
-/**
- * Test script for attempt to register a user that already exists on the platform
- */
-
-describe('register user', () => {
     it('attempts to register a user with an email that already exists', (done) => {
         const query = `mutation {
             register(email: "test@mocha.com", password: "safepassword123") {
@@ -76,12 +72,7 @@ describe('register user', () => {
                 done();
             });
     });
-});
 
-/**
- * Test script for attempt to register a user with an invalid email address
- */
-describe('register user ', () => {
     it('attempts to register a user with an invalid email', (done) => {
         const query = `mutation {
             register(email: "invalidemail.com", password: "safepassword123") {
@@ -104,20 +95,18 @@ describe('register user ', () => {
                 done();
             });
     });
-});
 
-/**
- * Test scirpt for attempt to register a user with a password that is not strong enough.
- * Passwords must be at least 8 characters long and contain a number.
- */
-describe('register user ', () => {
+    /**
+     * Test scirpt for attempt to register a user with a password that is not strong enough.
+     * Passwords must be at least 8 characters long and contain a number.
+     */
     it('attempts to register a user with an invalid password', (done) => {
         const query = `mutation {
-            register(email: "invalid@email.com", password: "badpass") {
-                id,
-                email
-            }
-        }`;
+        register(email: "invalid@email.com", password: "badpass") {
+            id,
+            email
+        }
+    }`;
 
         request
             .post('/graphql')
@@ -154,18 +143,45 @@ describe('login user', () => {
                 done();
             });
     });
-});
 
-/**
- * Test script for attempt to log in an unregistered user. 404 email not found
- */
-describe('login user', () => {
+    before('give username to user', () => {
+        User.findOne({ email: TEST_USER_EMAIL }, async (err, user) => {
+            if (err) {
+                throw new Error(err);
+            }
+
+            if (user) {
+                user.username = TEST_USERNAME;
+
+                await user.save();
+            }
+        });
+    });
+
+    it('successfully logs in a user with his username and password', (done) => {
+        logInWithValidCredentials(true)
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+
+                res.body.data.login.should.have.property('token');
+                // to make sure password does not leak
+                res.body.data.login.should.not.have.property('password');
+                done();
+            });
+    });
+
+    /**
+     * Test script for attempt to log in an unregistered user. 404 email not found
+     */
     it('attempts to login a user that is not registered', (done) => {
         const query = `mutation {
-            login(email: "nonexisten@email.com", password: "safepassword123") {
-                token
-            }
-        }`;
+        login(email: "nonexisten@email.com", password: "safepassword123") {
+            token
+        }
+    }`;
 
         request
             .post('/graphql')
@@ -182,18 +198,16 @@ describe('login user', () => {
                 done();
             });
     });
-});
 
-/**
- * Test script for attempt to log in a user with a wrong password. 401 wrong password
- */
-describe('login user', () => {
+    /**
+     * Test script for attempt to log in a user with a wrong password. 401 wrong password
+     */
     it('attempts to login a user with wrong password', (done) => {
         const query = `mutation {
-            login(email: "test@mocha.com", password: "wrongpassword123") {
-                token
-            }
-        }`;
+        login(email: "test@mocha.com", password: "wrongpassword123") {
+            token
+        }
+    }`;
 
         request
             .post('/graphql')
@@ -229,7 +243,6 @@ describe('/me', () => {
             .send({
                 query: 'query{me{username}}',
             })
-            .set('Authorization', 'Bearer Bad token')
             .expect(200)
             .end((err, res) => {
                 if (err) {
