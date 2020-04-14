@@ -16,8 +16,6 @@ const Course = require('../../api/models/courseModel');
 
 describe('Courses', () => {
     const COURSE_NAME = 'networks';
-    const SEMESTER = 2;
-    const GRADE = 9;
 
     const QUERY = `query {
         myCourses{
@@ -40,63 +38,7 @@ describe('Courses', () => {
     });
 
     it('adds a course for a user', (done) => {
-        const query = `mutation {
-            addCourse(name: "${COURSE_NAME}", schedule: {
-                day: 1,
-                start: 520,
-                end: 660,
-            }, semester: ${SEMESTER}) {
-                name,
-                semester,
-                grade,
-            }
-        }`;
-
-        request
-            .post('/graphql')
-            .send({ query })
-            .expect(200)
-            .end((err, res) => {
-                if (err) {
-                    throw new Error(err);
-                }
-
-                res.body.errors[0].should.have
-                    .property('status')
-                    .and.to.be.equal(401);
-
-                logInWithValidCredentials().end((err, res) => {
-                    if (err) {
-                        throw new Error(err);
-                    }
-
-                    const token = res.body.data.login.token;
-
-                    request
-                        .post('/graphql')
-                        .send({ query })
-                        .set('Authorization', 'Bearer ' + token)
-                        .expect(200)
-                        .end((err, res) => {
-                            if (err) {
-                                throw new Error(err);
-                            }
-
-                            const course = res.body.data.addCourse;
-
-                            course.should.have
-                                .property('name')
-                                .and.be.equal(COURSE_NAME);
-
-                            course.should.have
-                                .property('semester')
-                                .and.be.equal(SEMESTER);
-
-                            course.should.have.property('grade');
-                            done();
-                        });
-                });
-            });
+        addCourse(done);
     });
 
     it("retrieves a list of the user's courses", (done) => {
@@ -154,12 +96,11 @@ describe('Courses', () => {
                 day: 3,
                 start: 520,
                 end: 660,
-            }, grade: ${GRADE}) {
+            }) {
                 name,
                 schedule{
                     day
                 }
-                grade
             }
         }`;
 
@@ -198,10 +139,6 @@ describe('Courses', () => {
                                 .and.to.be.equal(COURSE_NAME);
 
                             res.body.data.addCourse.should.have
-                                .property('grade')
-                                .and.to.be.equal(GRADE);
-
-                            res.body.data.addCourse.should.have
                                 .property('schedule')
                                 .and.to.be.a('array')
                                 .and.have.lengthOf(2);
@@ -209,6 +146,10 @@ describe('Courses', () => {
                         });
                 });
             });
+    });
+
+    after('adds course after deletion so we have data to work with', (done) => {
+        addCourse(done);
     });
 
     it('deletes a course for a user', (done) => {
@@ -251,4 +192,56 @@ describe('Courses', () => {
                 });
             });
     });
+
+    const addCourse = (done) => {
+        const query = `mutation {
+            addCourse(name: "${COURSE_NAME}", schedule: {
+                day: 1,
+                start: 520,
+                end: 660,
+            }) {
+                name
+            }
+        }`;
+
+        request
+            .post('/graphql')
+            .send({ query })
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    throw new Error(err);
+                }
+
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(401);
+
+                logInWithValidCredentials().end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    const token = res.body.data.login.token;
+
+                    request
+                        .post('/graphql')
+                        .send({ query })
+                        .set('Authorization', 'Bearer ' + token)
+                        .expect(200)
+                        .end((err, res) => {
+                            if (err) {
+                                throw new Error(err);
+                            }
+
+                            const course = res.body.data.addCourse;
+
+                            course.should.have
+                                .property('name')
+                                .and.be.equal(COURSE_NAME);
+                            done();
+                        });
+                });
+            });
+    };
 });
