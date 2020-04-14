@@ -6,4 +6,6 @@ module.exports = Object.freeze({
     TEST_USER_EMAIL: 'test@mocha.com',
     TEST_USER_PASSWORD: 'safepassword123',
     TEST_USERNAME: 'test_mocha',
+    TEST_LOCATION: 'Corfu',
+    TEST_FACULTY_NAME: 'Ionian University',
 });

@@ -5,16 +5,23 @@ const chai = require('chai');
 const config = require('../../config');
 // eslint-disable-next-line no-unused-vars
 const should = chai.should();
+const expect = chai.expect;
 
 // get the dev api url
 const url = config.dev.url;
 // testing framework for HTTP requests
 const request = require('supertest')(url);
 
-const { TEST_USER_EMAIL, TEST_USERNAME } = require('../../global/messages');
+const {
+    TEST_USER_EMAIL,
+    TEST_USERNAME,
+    TEST_FACULTY_NAME,
+} = require('../../global/messages');
 
 const { logInWithValidCredentials } = require('../functions');
+
 const User = require('../../api/models/userModel');
+const Faculty = require('../../api/models/facultyModel');
 
 /**
  * Test script for registering a new user to the platform
@@ -274,5 +281,46 @@ describe('/me', () => {
                         });
                 });
             });
+    });
+});
+
+describe('User and faculty', () => {
+    it('links a user and a faculty', (done) => {
+        console.log('----------------');
+        Faculty.findOne({ name: TEST_FACULTY_NAME }, async (err, faculty) => {
+            if (err) {
+                throw new Error(err);
+            }
+
+            if (faculty) {
+                await User.findOne(
+                    { email: TEST_USER_EMAIL },
+                    async (err, user) => {
+                        if (err) {
+                            throw new Error(err);
+                        }
+
+                        if (user) {
+                            user.faculty_id = faculty._id;
+                            await user.save();
+                        }
+                    }
+                );
+
+                await User.findOne({ email: TEST_USER_EMAIL }, (err, user) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    if (user) {
+                        expect(user).to.have.property('faculty_id');
+                        expect(user.faculty_id.toString()).equals(
+                            faculty._id.toString()
+                        );
+                        done();
+                    }
+                });
+            }
+        });
     });
 });

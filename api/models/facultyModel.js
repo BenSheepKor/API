@@ -12,6 +12,6 @@ const faculty = new Schema({
     city: String,
 });
 
-faculty.index({ name: 1 });
+faculty.index({ name: 1, unique: true });
 
 module.exports = mongoose.model('Faculty', faculty);
