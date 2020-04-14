@@ -57,7 +57,7 @@ describe('register user', () => {
             });
     });
 
-    it('attempts to register a user with an email that already exists', (done) => {
+    it('attempts to register a user with an email that already exists and fails', (done) => {
         const query = `mutation {
             register(email: "test@mocha.com", password: "safepassword123") {
                 id,
@@ -80,7 +80,7 @@ describe('register user', () => {
             });
     });
 
-    it('attempts to register a user with an invalid email', (done) => {
+    it('attempts to register a user with an invalid email and fails', (done) => {
         const query = `mutation {
             register(email: "invalidemail.com", password: "safepassword123") {
                 id,
@@ -107,7 +107,7 @@ describe('register user', () => {
      * Test scirpt for attempt to register a user with a password that is not strong enough.
      * Passwords must be at least 8 characters long and contain a number.
      */
-    it('attempts to register a user with an invalid password', (done) => {
+    it('attempts to register a user with an invalid password and fails', (done) => {
         const query = `mutation {
         register(email: "invalid@email.com", password: "badpass") {
             id,
@@ -288,7 +288,7 @@ describe('login user', () => {
     /**
      * Test script for attempt to log in an unregistered user. 404 email not found
      */
-    it('attempts to login a user that is not registered', (done) => {
+    it('attempts to login a user that is not registered and fails', (done) => {
         const query = `mutation {
         login(email: "nonexisten@email.com", password: "safepassword123") {
             token
@@ -314,7 +314,7 @@ describe('login user', () => {
     /**
      * Test script for attempt to log in a user with a wrong password. 401 wrong password
      */
-    it('attempts to login a user with wrong password', (done) => {
+    it('attempts to login a user with wrong password and fails', (done) => {
         const query = `mutation {
         login(email: "test@mocha.com", password: "wrongpassword123") {
             token
@@ -335,45 +335,5 @@ describe('login user', () => {
                     .and.to.be.equal(401);
                 done();
             });
-    });
-});
-
-describe('User and faculty', () => {
-    it('links a user and a faculty', (done) => {
-        Faculty.findOne({ name: TEST_FACULTY_NAME }, async (err, faculty) => {
-            if (err) {
-                throw new Error(err);
-            }
-
-            if (faculty) {
-                await User.findOne(
-                    { email: TEST_USER_EMAIL },
-                    async (err, user) => {
-                        if (err) {
-                            throw new Error(err);
-                        }
-
-                        if (user) {
-                            user.faculty_id = faculty._id;
-                            await user.save();
-                        }
-                    }
-                );
-
-                await User.findOne({ email: TEST_USER_EMAIL }, (err, user) => {
-                    if (err) {
-                        throw new Error(err);
-                    }
-
-                    if (user) {
-                        expect(user).to.have.property('faculty_id');
-                        expect(user.faculty_id.toString()).equals(
-                            faculty._id.toString()
-                        );
-                        done();
-                    }
-                });
-            }
-        });
     });
 });
