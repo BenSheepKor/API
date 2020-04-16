@@ -7,6 +7,15 @@
 
 // Prevent object modification
 module.exports = Object.freeze({
+    // General errors
+    NO_AUTH: {
+        message: 'You are not authorized to make this call',
+        status: 401,
+    },
+    UKNOWN: {
+        message: 'Something went terribly wrong. We are wokring on it',
+        status: 500,
+    },
     // Register
     INVALID_EMAIL: {
         message: 'The email address is not valid',
@@ -29,10 +38,7 @@ module.exports = Object.freeze({
         message: 'Password is incorrect',
         status: 401,
     },
-    NO_AUTH: {
-        message: 'You are not authorized to make this call',
-        status: 401,
-    },
+    // Courses
     DUPLICATE_COURSE: {
         message: 'This course already exists',
         status: 409,
@@ -40,9 +46,5 @@ module.exports = Object.freeze({
     COURSE_DOES_NOT_EXIST: {
         message: 'We did not find a course matching your query',
         status: 404,
-    },
-    UKNOWN: {
-        message: 'Something went terribly wrong. We are wokring on it',
-        status: 500,
     },
 });

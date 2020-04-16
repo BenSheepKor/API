@@ -4,7 +4,7 @@ const Course = require('../models/courseModel');
 const { checkForToken, getUserIdByToken } = require('../../global/functions');
 
 /**
- * Callback function for courses query
+ * Callback function for courses query. Returns all user's courses after authentication
  */
 module.exports.get = async (args, req) => {
     // check for auth token
@@ -29,6 +29,9 @@ module.exports.get = async (args, req) => {
     throw new Error('NO_AUTH');
 };
 
+/**
+ * Callback function for addCourse.
+ */
 module.exports.create = async (args, req) => {
     const token = checkForToken(req);
 
@@ -64,6 +67,10 @@ module.exports.create = async (args, req) => {
     throw new Error('NO_AUTH');
 };
 
+/**
+ * Callback function for updateCourse
+ */
+
 module.exports.update = async (args, req) => {
     const token = checkForToken(req);
 
@@ -95,6 +102,10 @@ module.exports.update = async (args, req) => {
 
     throw new Error('NO_AUTH');
 };
+
+/**
+ * Callback function for delete course
+ */
 
 module.exports.delete = async (args, req) => {
     const token = checkForToken(req);
