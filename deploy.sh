@@ -12,6 +12,9 @@ git pull
 # Run npm install. Yes @Dimos I am looking at you ¯\_(ツ)_/¯.
 npm install
 
+# Run database seeder
+node seeder.js
+
 # Restart the node server so the changes apply
 pm2 restart server
 
