@@ -1,5 +1,6 @@
 const axios = require('../axios');
 const User = require('../../api/models/userModel');
+const Weather = require('../../api/models/weatherModel');
 const {
     API_URL,
     APP_ID,
@@ -87,5 +88,22 @@ module.exports.fetchWeatherData = (endpoint, city) => {
             default:
                 throw new Error();
         }
+    }
+};
+
+module.exports.saveWeatherData = async (weatherObject) => {
+    const city = weatherObject.city.name;
+
+    for (let i = 0; i < 8; i++) {
+        const weatherReport = weatherObject.list[i];
+
+        const weather = new Weather({
+            timestamp: weatherReport.dt || 0,
+            temp: weatherReport.main.temp || '',
+            description: weatherReport.weather[0].description || '',
+            city,
+        });
+
+        await weather.save();
     }
 };

@@ -19,6 +19,7 @@ const {
     expect401,
     logInWithValidCredentials,
 } = require('../functions');
+const { saveWeatherData } = require('../../global/functions');
 const { fetchWeatherData } = require('../../global/functions');
 
 // Weather cron job
@@ -113,20 +114,3 @@ describe('Weather cron', () => {
             .and.to.have.string(`${CITY} weather data`);
     });
 });
-
-const saveWeatherData = (weatherObject) => {
-    const city = weatherObject.city.name;
-
-    for (let i = 0; i < 8; i++) {
-        const weatherReport = weatherObject.list[i];
-
-        const weather = new Weather({
-            timestamp: weatherReport.dt || 0,
-            temp: weatherReport.main.temp || '',
-            description: weatherReport.weather[0].description || '',
-            city,
-        });
-
-        weather.save();
-    }
-};
