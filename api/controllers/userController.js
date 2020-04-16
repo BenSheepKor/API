@@ -216,12 +216,12 @@ exports.update = async (args, req) => {
  *
  * @returns {Boolean} True or false depending on the validity of the email against the regex
  */
-function validateEmail(email) {
+const validateEmail = (email) => {
     // taken from https://emailregex.com/
     const emailRegex = /^(([^<>()\\[\]\\.,;:\s@"]+(\.[^<>()\\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
 
     return emailRegex.test(String(email).toLowerCase());
-}
+};
 
 /**
  * Function that gets the user password upon registration and checks its validity
@@ -231,9 +231,9 @@ function validateEmail(email) {
  *
  * @returns {Boolean} True or false depending on the validity of the password
  */
-function validatePassword(password) {
+const validatePassword = (password) => {
     return password.length > 8 && /\d/.test(password);
-}
+};
 
 /**
  * Function that compares the input password of user with the given email with the stored password in the database. If comparison is truthy
@@ -245,7 +245,7 @@ function validatePassword(password) {
  * @returns {String | Boolean} Returns a JWT token if passwords are the same. Otherwise, returns false
  */
 
-function verifyPassword(checkValue, password, isUsername = false) {
+const verifyPassword = (checkValue, password, isUsername = false) => {
     const filterObj = {};
 
     if (isUsername) {
@@ -265,7 +265,7 @@ function verifyPassword(checkValue, password, isUsername = false) {
 
         return doesMatch;
     });
-}
+};
 
 /**
  * Function that searches the database for a user email or username upon registration and login to check for duplicates. Fires after input validation
@@ -274,7 +274,7 @@ function verifyPassword(checkValue, password, isUsername = false) {
  *
  * @returns {User | Boolean} User object or false depending on the existence of duplicate emails
  */
-function checkUserExists(checkValue, isUsername = false) {
+const checkUserExists = (checkValue, isUsername = false) => {
     const filterObj = {};
 
     if (isUsername) {
@@ -294,22 +294,22 @@ function checkUserExists(checkValue, isUsername = false) {
 
         return false;
     });
-}
+};
 
 /**
  * Function that generates a JWT token for the user after succesffull login
  * @returns {String} Dummy hard coded string for now
  */
-function generateToken() {
+const generateToken = () => {
     const jwt = nJwt.create(jwtConfigs.claims, jwtConfigs.signingKey);
 
     // The token that the client receives
     const token = jwt.compact();
 
     return { token };
-}
+};
 
-function storeToken(userId, token) {
+const storeToken = (userId, token) => {
     return User.findOneAndUpdate({ id: userId }, { token }, (err) => {
         if (err) {
             throw new Error(err);
@@ -317,7 +317,7 @@ function storeToken(userId, token) {
 
         return true;
     });
-}
+};
 
 /**
  * Function that persists the newly registered user in the database. Both email and password have already been validated
@@ -327,7 +327,7 @@ function storeToken(userId, token) {
  *
  * @returns {Number} Returns the id of the user. Throws error in case something goes wrong
  */
-async function registerUser(email, password) {
+const registerUser = async (email, password) => {
     const id = await generateId();
 
     // takes about ~80ms
@@ -339,7 +339,7 @@ async function registerUser(email, password) {
     const user = new User({ id, email, password });
 
     return user.save();
-}
+};
 
 /**
  * Function that generates the ID for the newly registerd user. MongoDB provides an _id field but it is not readable.
@@ -351,7 +351,7 @@ async function registerUser(email, password) {
  * @returns {Number} The id of the user about to register
  *
  */
-function generateId() {
+const generateId = () => {
     return User.find()
         .sort({ _id: -1 })
         .limit(1)
@@ -362,4 +362,4 @@ function generateId() {
 
             return 1;
         });
-}
+};

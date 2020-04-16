@@ -72,7 +72,7 @@ exports.getWeatherByCityName = async (args, req) => {
  * @param {Object} fullWeatherResponseObject The API repsponse data from the third party weather api
  * @returns {Weather} A weather object accoring to our model
  */
-function prepareWeatherResponseObject(fullWeatherResponseObject) {
+const prepareWeatherResponseObject = (fullWeatherResponseObject) => {
     const lat = fullWeatherResponseObject.coord.lat;
     const lng = fullWeatherResponseObject.coord.lon;
     const description = fullWeatherResponseObject.weather[0].description;
@@ -99,4 +99,4 @@ function prepareWeatherResponseObject(fullWeatherResponseObject) {
         .catch((error) => {
             throw new Error(error);
         });
-}
+};

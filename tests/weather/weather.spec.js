@@ -114,7 +114,7 @@ describe('Weather cron', () => {
     });
 });
 
-function saveWeatherData(weatherObject) {
+const saveWeatherData = (weatherObject) => {
     const city = weatherObject.city.name;
 
     for (let i = 0; i < 8; i++) {
@@ -129,4 +129,4 @@ function saveWeatherData(weatherObject) {
 
         weather.save();
     }
-}
+};

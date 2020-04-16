@@ -45,7 +45,7 @@ Location.find({}, (err, locations) => {
  *
  * @returns {Boolean} Returns true if all weather objects are saved else throws error
  */
-async function prepareAndSave(weatherObj) {
+const prepareAndSave = async (weatherObj) => {
     const weatherList = weatherObj.list;
 
     // make sure the list has elements
@@ -88,7 +88,7 @@ async function prepareAndSave(weatherObj) {
 
     // if all data is store return true
     return true;
-}
+};
 
 /**
  * Function that sends a message to a discord channel that lets us know the state of the weather cron job
@@ -97,7 +97,7 @@ async function prepareAndSave(weatherObj) {
  * @param {boolean} location The location the weather data was for
  * @param {string} source The source of the call. Defaults to empty string and is hardcoded 'TEST' for test suites
  */
-function notifyDiscordChannel(success, city, source = '') {
+const notifyDiscordChannel = (success, city, source = '') => {
     let content = `${city} weather data fetched at ${new Date()}`;
 
     if (!success) {
@@ -120,7 +120,7 @@ function notifyDiscordChannel(success, city, source = '') {
             // do nothing
             throw new Error(err);
         });
-}
+};
 
 /**
  * Function that deletes all data when the cron job starts. That way, we ensure that there is no weather data for prior times
@@ -129,7 +129,7 @@ function notifyDiscordChannel(success, city, source = '') {
  *
  * @returns {Boolean} Returns true if deletion was successful
  */
-function deleteWeatherData(city) {
+const deleteWeatherData = (city) => {
     return Weather.deleteMany({ city }).then((res, err) => {
         if (err) {
             throw new Error(err);
@@ -137,7 +137,7 @@ function deleteWeatherData(city) {
 
         return res;
     });
-}
+};
 
 /**
  * Function that runs every 3 hours. Deletes all weather data for a specific location and then fetches new. Notifies discord channel
