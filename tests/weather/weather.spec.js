@@ -6,11 +6,6 @@ const chai = require('chai');
 const should = chai.should();
 const expect = chai.expect;
 
-// get the dev api url
-const { dev } = require('../../config');
-// testing framework for HTTP requests
-const request = require('supertest')(dev.url);
-
 const { TEST_SUITE_SOURCE } = require('../../global/messages');
 
 const Weather = require('../../api/models/weatherModel');
