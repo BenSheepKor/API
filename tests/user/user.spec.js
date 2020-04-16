@@ -134,7 +134,7 @@ describe('register user', () => {
  * Test for me query endpoint
  */
 
-describe('/me', () => {
+describe('me', () => {
     it('retrieve user information', (done) => {
         const query = `query {
             me {
@@ -303,6 +303,28 @@ describe('login user', () => {
                     return done(err);
                 }
 
+                res.body.errors[0].should.have
+                    .property('status')
+                    .and.to.be.equal(404);
+                done();
+            });
+    });
+
+    it('attempts to login a user with an non registered username and fails', (done) => {
+        const query = `mutation {
+            login(email: "nonexistenusernmae", password: "safepassword123") {
+                token
+            }
+        }`;
+
+        request
+            .post('/graphql')
+            .send({ query })
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    throw new Error(err);
+                }
                 res.body.errors[0].should.have
                     .property('status')
                     .and.to.be.equal(404);
