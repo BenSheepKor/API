@@ -18,6 +18,9 @@ const root = {
     login: (args) => {
         return UserController.login(args);
     },
+    newMe: (args, req) => {
+        return UserController.update(args, req);
+    },
 
     // Weather related
     weather: (args, req) => {
@@ -30,6 +33,9 @@ const root = {
     },
     addCourse: (args, req) => {
         return CourseController.create(args, req);
+    },
+    updateCourse: (args, req) => {
+        return CourseController.update(args, req);
     },
     deleteCourse: (args, req) => {
         return CourseController.delete(args, req);

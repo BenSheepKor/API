@@ -7,7 +7,7 @@ type User {
   name: String,
   email: String!,
   username: String,
-  faculty: String!,
+  faculty_id: String!,
 },
 type JWT {
   token: String!
@@ -54,7 +54,9 @@ const mutations = `
 type Mutation {
   register(email: String!, password: String!): User,
   login(email: String, username: String, password: String!): JWT,
+  newMe(username: String, password: String, facultyId: String): User,
   addCourse(name: String!, schedule: ScheduleInput, semester: Int, grade: Float, professor: String): Course,
+  updateCourse(name: String!, schedule: ScheduleInput, semester: Int, grade: Float, professor: String): Course,
   deleteCourse(name: String!): Boolean
 },`;
 

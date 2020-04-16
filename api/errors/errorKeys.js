@@ -33,6 +33,14 @@ module.exports = Object.freeze({
         message: 'You are not authorized to make this call',
         status: 401,
     },
+    DUPLICATE_COURSE: {
+        message: 'This course already exists',
+        status: 409,
+    },
+    COURSE_DOES_NOT_EXIST: {
+        message: 'We did not find a course matching your query',
+        status: 404,
+    },
     UKNOWN: {
         message: 'Something went terribly wrong. We are wokring on it',
         status: 500,

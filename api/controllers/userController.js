@@ -3,14 +3,14 @@
 // Get mongoose to connect with the mongodb database
 const mongoose = require('mongoose');
 
-// Get the User model
-const User = mongoose.model('User');
-
 // Get bcrypt for password hasing and salt generation
 const bcrypt = require('bcrypt');
 
 // JWT package for Node
 const nJwt = require('njwt');
+
+// Get models
+const User = require('../models/userModel');
 
 // configuration file for JWT
 const jwtConfigs = require('../jwt/config.dev');
@@ -136,8 +136,12 @@ exports.login = async (req) => {
 
         // user wants to login using email address
         if (!username && email !== '') {
-            // sent email exists in the database
-            userDoesExist = await checkUserExists(email);
+            if (validateEmail(email)) {
+                // sent email exists in the database
+                userDoesExist = await checkUserExists(email);
+            } else {
+                throw new Error('INVALID_EMAIL');
+            }
         }
 
         // user wants to login using username
@@ -173,6 +177,35 @@ exports.login = async (req) => {
     }
 
     throw new Error('INCORRECT_PASSWORD');
+};
+
+exports.update = async (args, req) => {
+    const token = checkForToken(req);
+
+    if (token) {
+        const user = await isAuthorized(token);
+        if (user) {
+            const { username, password, facultyId } = args;
+
+            if (username) {
+                user.username = username;
+            }
+
+            if (password) {
+                user.password = password;
+            }
+
+            if (facultyId) {
+                user.faculty_id = mongoose.Types.ObjectId(facultyId);
+            }
+
+            await user.save();
+
+            return user;
+        }
+    }
+
+    throw new Error('NO_AUTH');
 };
 
 /**

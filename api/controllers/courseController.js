@@ -57,16 +57,39 @@ module.exports.create = async (args, req) => {
                 return newCourse;
             }
 
-            const updatedCourse = await updateCourse(
-                course,
-                name,
-                schedule,
-                grade,
-                semester,
-                professor
-            );
+            throw new Error('DUPLICATE_COURSE');
+        }
+    }
 
-            return updatedCourse;
+    throw new Error('NO_AUTH');
+};
+
+module.exports.update = async (args, req) => {
+    const token = checkForToken(req);
+
+    if (token) {
+        const { name } = args;
+
+        if (name) {
+            const { id } = await getUserIdByToken(token);
+            const course = await checkUserHasCourse(id, name);
+
+            if (course) {
+                const { name, schedule, semester, grade, professor } = args;
+
+                const updatedCourse = await updateCourse(
+                    course,
+                    name,
+                    schedule,
+                    grade,
+                    semester,
+                    professor
+                );
+
+                return updatedCourse;
+            }
+
+            throw new Error('COURSE_DOES_NOT_EXIST');
         }
     }
 

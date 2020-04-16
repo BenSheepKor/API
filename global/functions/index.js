@@ -54,7 +54,7 @@ module.exports.isAuthorized = (token) => {
         }
 
         if (user) {
-            return user.token === token;
+            return user;
         }
 
         return false;
