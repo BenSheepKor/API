@@ -1,24 +1,19 @@
 'use-strict';
 
 const chai = require('chai');
-// configuration file that includes env options
-const config = require('../../config');
 // eslint-disable-next-line no-unused-vars
 const should = chai.should();
 
-// get the dev api url
-const url = config.dev.url;
-// testing framework for HTTP requests
-const request = require('supertest')(url);
-
 const Course = require('../../api/models/courseModel');
 
-const { logInWithValidCredentials } = require('../functions');
-
 const {
-    DUPLICATE_COURSE,
-    COURSE_DOES_NOT_EXIST,
-} = require('../../api/errors/errorKeys');
+    sendQuery,
+    sendAuthQuery,
+    expect401,
+    expect404,
+    expect409,
+    logInWithValidCredentials,
+} = require('../functions');
 
 describe('Courses', () => {
     const COURSE_NAME = 'networks';
@@ -48,52 +43,42 @@ describe('Courses', () => {
     });
 
     it("retrieves a list of the user's courses", (done) => {
-        request
-            .post('/graphql')
-            .send({ query: QUERY })
-            .expect(200)
-            .end((err, res) => {
+        sendQuery(QUERY).end((err, res) => {
+            if (err) {
+                throw new Error(err);
+            }
+
+            expect401(err, res);
+
+            logInWithValidCredentials().end((err, res) => {
                 if (err) {
                     throw new Error(err);
                 }
 
-                res.body.errors[0].should.have
-                    .property('status')
-                    .and.to.be.equal(401);
+                const token = res.body.data.login.token;
 
-                logInWithValidCredentials().end((err, res) => {
+                sendAuthQuery(QUERY, token).end((err, res) => {
                     if (err) {
                         throw new Error(err);
                     }
 
-                    const token = res.body.data.login.token;
-                    request
-                        .post('/graphql')
-                        .send({ query: QUERY })
-                        .set('Authorization', 'Bearer ' + token)
-                        .expect(200)
-                        .end((err, res) => {
-                            if (err) {
-                                throw new Error(err);
-                            }
+                    const course = res.body.data.myCourses[0];
 
-                            const course = res.body.data.myCourses[0];
+                    res.body.data.myCourses.should.be.a('array');
+                    course.should.have.property('name');
+                    course.name.should.equal(COURSE_NAME);
 
-                            res.body.data.myCourses.should.be.a('array');
-                            course.should.have.property('name');
-                            course.name.should.equal(COURSE_NAME);
+                    // in js array of objects is of type object
+                    course.should.have
+                        .property('schedule')
+                        .and.should.be.a('object');
 
-                            // in js array of objects is of type object
-                            course.should.have
-                                .property('schedule')
-                                .and.should.be.a('object');
-
-                            const schedule = course.schedule[0];
-                            schedule.should.have.keys('day', 'start');
-                            done();
-                        });
+                    const schedule = course.schedule[0];
+                    schedule.should.have.keys('day', 'start');
+                    done();
                 });
             });
+        });
     });
 
     it('updates a course for a user', (done) => {
@@ -110,48 +95,33 @@ describe('Courses', () => {
             }
         }`;
 
-        request
-            .post('/graphql')
-            .send({ query })
-            .expect(200)
-            .end((err, res) => {
+        sendQuery(query).end((err, res) => {
+            expect401(err, res);
+
+            logInWithValidCredentials().end((err, res) => {
                 if (err) {
                     throw new Error(err);
                 }
 
-                res.body.errors[0].should.have
-                    .property('status')
-                    .and.to.be.equal(401);
+                const token = res.body.data.login.token;
 
-                logInWithValidCredentials().end((err, res) => {
+                sendAuthQuery(query, token).end((err, res) => {
                     if (err) {
                         throw new Error(err);
                     }
 
-                    const token = res.body.data.login.token;
+                    res.body.data.updateCourse.should.have
+                        .property('name')
+                        .and.to.be.equal(COURSE_NAME);
 
-                    request
-                        .post('/graphql')
-                        .send({ query })
-                        .set('Authorization', 'Bearer ' + token)
-                        .expect(200)
-                        .end((err, res) => {
-                            if (err) {
-                                throw new Error(err);
-                            }
-
-                            res.body.data.updateCourse.should.have
-                                .property('name')
-                                .and.to.be.equal(COURSE_NAME);
-
-                            res.body.data.updateCourse.should.have
-                                .property('schedule')
-                                .and.to.be.a('array')
-                                .and.have.lengthOf(2);
-                            done();
-                        });
+                    res.body.data.updateCourse.should.have
+                        .property('schedule')
+                        .and.to.be.a('array')
+                        .and.have.lengthOf(2);
+                    done();
                 });
             });
+        });
     });
 
     it('attemps to create a course that already exists and fails', (done) => {
@@ -172,23 +142,9 @@ describe('Courses', () => {
 
             const token = res.body.data.login.token;
 
-            request
-                .post('/graphql')
-                .send({ query })
-                .set('Authorization', 'Bearer ' + token)
-                .expect(200)
-                .end((err, res) => {
-                    if (err) {
-                        throw new Error(err);
-                    }
-
-                    const error = res.body.errors[0];
-
-                    error.should.have
-                        .property('status')
-                        .and.to.be.equal(DUPLICATE_COURSE.status);
-                    done();
-                });
+            sendAuthQuery(query, token).end((err, res) => {
+                expect409(err, res, done);
+            });
         });
     });
 
@@ -206,45 +162,21 @@ describe('Courses', () => {
             }
         }`;
 
-        request
-            .post('/graphql')
-            .send({ query })
-            .expect(200)
-            .end((err, res) => {
+        sendQuery(query).end((err, res) => {
+            expect401(err, res);
+
+            logInWithValidCredentials().end((err, res) => {
                 if (err) {
                     throw new Error(err);
                 }
 
-                res.body.errors[0].should.have
-                    .property('status')
-                    .and.to.be.equal(401);
+                const token = res.body.data.login.token;
 
-                logInWithValidCredentials().end((err, res) => {
-                    if (err) {
-                        throw new Error(err);
-                    }
-
-                    const token = res.body.data.login.token;
-
-                    request
-                        .post('/graphql')
-                        .send({ query })
-                        .set('Authorization', 'Bearer ' + token)
-                        .expect(200)
-                        .end((err, res) => {
-                            if (err) {
-                                throw new Error(err);
-                            }
-
-                            const error = res.body.errors[0];
-
-                            error.should.have
-                                .property('status')
-                                .and.to.be.equal(COURSE_DOES_NOT_EXIST.status);
-                            done();
-                        });
+                sendAuthQuery(query, token).end((err, res) => {
+                    expect404(err, res, done);
                 });
             });
+        });
     });
 
     after('adds course after deletion so we have data to work with', (done) => {
@@ -256,40 +188,26 @@ describe('Courses', () => {
             deleteCourse(name: "${COURSE_NAME}")
         }`;
 
-        request
-            .post('/graphql')
-            .send({ query })
-            .expect(200)
-            .end((err, res) => {
+        sendQuery(query).end((err, res) => {
+            expect401(err, res);
+
+            logInWithValidCredentials().end((err, res) => {
                 if (err) {
                     throw new Error(err);
                 }
 
-                res.body.errors[0].should.have
-                    .property('status')
-                    .and.to.be.equal(401);
+                const token = res.body.data.login.token;
 
-                logInWithValidCredentials().end((err, res) => {
+                sendAuthQuery(query, token).end((err, res) => {
                     if (err) {
                         throw new Error(err);
                     }
 
-                    const token = res.body.data.login.token;
-                    request
-                        .post('/graphql')
-                        .send({ query })
-                        .set('Authorization', 'Bearer ' + token)
-                        .expect(200)
-                        .end((err, res) => {
-                            if (err) {
-                                throw new Error(err);
-                            }
-
-                            res.body.data.deleteCourse.should.equal(true);
-                            done();
-                        });
+                    res.body.data.deleteCourse.should.equal(true);
+                    done();
                 });
             });
+        });
     });
 
     const addCourse = (done) => {
@@ -303,44 +221,29 @@ describe('Courses', () => {
             }
         }`;
 
-        request
-            .post('/graphql')
-            .send({ query })
-            .expect(200)
-            .end((err, res) => {
+        sendQuery(query).end((err, res) => {
+            expect401(err, res);
+
+            logInWithValidCredentials().end((err, res) => {
                 if (err) {
                     throw new Error(err);
                 }
 
-                res.body.errors[0].should.have
-                    .property('status')
-                    .and.to.be.equal(401);
+                const token = res.body.data.login.token;
 
-                logInWithValidCredentials().end((err, res) => {
+                sendAuthQuery(query, token).end((err, res) => {
                     if (err) {
                         throw new Error(err);
                     }
 
-                    const token = res.body.data.login.token;
+                    const course = res.body.data.addCourse;
 
-                    request
-                        .post('/graphql')
-                        .send({ query })
-                        .set('Authorization', 'Bearer ' + token)
-                        .expect(200)
-                        .end((err, res) => {
-                            if (err) {
-                                throw new Error(err);
-                            }
-
-                            const course = res.body.data.addCourse;
-
-                            course.should.have
-                                .property('name')
-                                .and.be.equal(COURSE_NAME);
-                            done();
-                        });
+                    course.should.have
+                        .property('name')
+                        .and.be.equal(COURSE_NAME);
+                    done();
                 });
             });
+        });
     };
 });

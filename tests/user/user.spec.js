@@ -19,9 +19,10 @@ const {
     sendQuery,
     sendAuthQuery,
     logInWithValidCredentials,
+    expect401,
+    expect409,
     expect404,
     expect422,
-    expect401,
 } = require('../functions');
 
 const User = require('../../api/models/userModel');
@@ -67,10 +68,7 @@ describe('register user', () => {
             if (err) {
                 return done(err);
             }
-            res.body.errors[0].should.have
-                .property('status')
-                .and.to.be.equal(409);
-            done();
+            expect409(err, res, done);
         });
     });
 

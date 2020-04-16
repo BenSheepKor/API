@@ -55,6 +55,15 @@ module.exports.expect422 = (err, res, done) => {
     done();
 };
 
+module.exports.expect409 = (err, res, done) => {
+    if (err) {
+        throw new Error(err);
+    }
+
+    res.body.errors[0].should.have.property('status').and.to.be.equal(409);
+    done();
+};
+
 module.exports.expect401 = (err, res, done = false) => {
     if (err) {
         throw new Error(err);
