@@ -136,8 +136,12 @@ exports.login = async (req) => {
 
         // user wants to login using email address
         if (!username && email !== '') {
-            // sent email exists in the database
-            userDoesExist = await checkUserExists(email);
+            if (validateEmail(email)) {
+                // sent email exists in the database
+                userDoesExist = await checkUserExists(email);
+            } else {
+                throw new Error('INVALID_EMAIL');
+            }
         }
 
         // user wants to login using username
