@@ -18,8 +18,14 @@ require('./cron/weather/weather.cron');
 app.use(cors());
 app.options('*', cors()); // include before other routes
 
-// Make Mongoose use `findOneAndUpdate()`. Note that this option is `true` by default, you need to set it to false.
+// Deprecation warnings fix and mongo configs
+mongoose.Promise = global.Promise;
 mongoose.set('useFindAndModify', false);
+mongoose.set('useCreateIndex', true);
+mongoose.connect('mongodb://localhost/BenSheep', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+});
 
 const expressGraphQL = require('express-graphql');
 
@@ -47,12 +53,6 @@ app.use(
         graphiql: true,
     })
 );
-
-// legacy code that may or may not be needed
-mongoose.Promise = global.Promise;
-
-// connect to the database
-mongoose.connect('mongodb://localhost/BenSheep');
 
 // register routes
 const routes = require('./api/routes/all_routes');

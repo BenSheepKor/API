@@ -12,6 +12,10 @@ git pull
 # Run npm install. Yes @Dimos I am looking at you ¯\_(ツ)_/¯.
 npm install
 
+sleep 1
+
+npm run seed
+
 # Run database seeder
 node seeder.js
 

@@ -1,40 +1,41 @@
 {
-  "name": "pug_sheep_api",
-  "version": "1.0.0",
-  "description": "The API for the project that Mr. Provatas and Mr. Pagakis are working on",
-  "main": "index.js",
-  "scripts": {
-    "start": "nodemon server.js",
-    "test": "mocha tests/index.spec.js --exit --timeout 5000",
-    "lint": "eslint api cron global *.js tests",
-    "fix": "eslint api cron global *.js tests --fix"
-  },
-  "author": "Provatas Dimitris, Pagakis Dimosthenis",
-  "license": "ISC",
-  "devDependencies": {
-    "@babel/cli": "^7.8.4",
-    "@babel/core": "^7.9.0",
-    "@babel/preset-env": "^7.9.5",
-    "chai": "^4.2.0",
-    "eslint": "^6.8.0",
-    "eslint-plugin-prettier": "^3.1.2",
-    "mocha": "^7.1.1",
-    "nodemon": "^2.0.2",
-    "prettier": "2.0.4",
-    "supertest": "^4.0.2"
-  },
-  "dependencies": {
-    "axios": "^0.19.2",
-    "bcrypt": "^4.0.1",
-    "body-parse": "^0.1.0",
-    "body-parser": "^1.19.0",
-    "cors": "^2.8.5",
-    "cron": "^1.8.2",
-    "express": "^4.17.1",
-    "express-graphql": "^0.9.0",
-    "graphql": "^14.6.0",
-    "mongoose": "^5.9.3",
-    "njwt": "^1.0.0",
-    "secure-random": "^1.1.2"
-  }
+    "name": "pug_sheep_api",
+    "version": "1.0.0",
+    "description": "The API for the project that Mr. Provatas and Mr. Pagakis are working on",
+    "main": "index.js",
+    "scripts": {
+        "start": "nodemon server.js",
+        "seed": "node seeder.js",
+        "test": "mocha tests/index.spec.js --exit --timeout 5000",
+        "lint": "eslint api cron global *.js tests",
+        "fix": "eslint api cron global *.js tests --fix"
+    },
+    "author": "Provatas Dimitris, Pagakis Dimosthenis",
+    "license": "ISC",
+    "devDependencies": {
+        "@babel/cli": "^7.8.4",
+        "@babel/core": "^7.9.0",
+        "@babel/preset-env": "^7.9.5",
+        "chai": "^4.2.0",
+        "eslint": "^6.8.0",
+        "eslint-plugin-prettier": "^3.1.2",
+        "mocha": "^7.1.1",
+        "nodemon": "^2.0.2",
+        "prettier": "2.0.4",
+        "supertest": "^4.0.2"
+    },
+    "dependencies": {
+        "axios": "^0.19.2",
+        "bcrypt": "^4.0.1",
+        "body-parse": "^0.1.0",
+        "body-parser": "^1.19.0",
+        "cors": "^2.8.5",
+        "cron": "^1.8.2",
+        "express": "^4.17.1",
+        "express-graphql": "^0.9.0",
+        "graphql": "^14.6.0",
+        "mongoose": "^5.9.3",
+        "njwt": "^1.0.0",
+        "secure-random": "^1.1.2"
+    }
 }

@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://localhost/BenSheep');
+mongoose.set('useCreateIndex', true);
+mongoose.connect('mongodb://localhost/BenSheep', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+});
 
 // models
 const User = require('./api/models/userModel');
@@ -11,9 +15,13 @@ const Weather = require('./api/models/weatherModel');
 
 const { fetchWeatherData, saveWeatherData } = require('./global/functions');
 
-console.log('==================================\n');
-console.log('Starting db-purge\n');
-console.log('==================================\n');
+// emojis
+const flame = String.fromCodePoint(0x1f525);
+const write = String.fromCodePoint(0x1f4c4);
+const wine = String.fromCodePoint(0x1f377);
+
+console.log('==================================\n\n');
+console.log(`${flame} \t Starting db-purge \t ${flame} \n\n`);
 
 User.deleteMany({}, (err) => {
     if (err) {
@@ -54,7 +62,9 @@ User.deleteMany({}, (err) => {
                 }
 
                 console.log('==================================\n');
-                console.log('Weather data removed\n');
+                console.log('Weather data removed\n\n');
+                console.log('==================================\n\n');
+                console.log(`${write} \t Starting db-seed \t${write} \n\n`);
             });
 
             User.insertMany(users, (err, insertedUsers) => {
@@ -122,6 +132,16 @@ User.deleteMany({}, (err) => {
                                                             );
                                                             console.log(
                                                                 'Weather data added \n'
+                                                            );
+
+                                                            console.log(
+                                                                '==================================\n\n'
+                                                            );
+                                                            console.log(
+                                                                `${wine} \t Delete and seed succeeded.\n${wine} \t Gracefully exiting \n\n`
+                                                            );
+                                                            console.log(
+                                                                '==================================\n\n'
                                                             );
 
                                                             process.exit(0);
