@@ -14,10 +14,8 @@ npm install
 
 sleep 1
 
-npm run seed
-
 # Run database seeder
-node seeder.js
+npm run seed
 
 # Restart the node server so the changes apply
 pm2 restart server

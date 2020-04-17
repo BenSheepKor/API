@@ -138,7 +138,7 @@ User.deleteMany({}, (err) => {
                                                                 '==================================\n\n'
                                                             );
                                                             console.log(
-                                                                `${wine} \t Delete and seed succeeded.\n${wine} \t Gracefully exiting \n\n`
+                                                                `${wine} \t Seeding completed.\n${wine} \t Gracefully exiting \n\n`
                                                             );
                                                             console.log(
                                                                 '==================================\n\n'
