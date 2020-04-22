@@ -47,7 +47,8 @@ type Query {
   users: [User]
   me: User
   weather(city: String!): Weather,
-  myCourses: [Course]
+  myCourses: [Course],
+  course(_id: String, name: String): Course
 },
 `;
 

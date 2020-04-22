@@ -6,7 +6,7 @@ const { checkForToken, getUserIdByToken } = require('../../global/functions');
 /**
  * Callback function for courses query. Returns all user's courses after authentication
  */
-module.exports.get = async (args, req) => {
+module.exports.list = async (args, req) => {
     // check for auth token
     const token = checkForToken(req);
 
@@ -15,6 +15,38 @@ module.exports.get = async (args, req) => {
         const { id } = await getUserIdByToken(token);
         if (id) {
             return Course.find({ user_id: id }, (err, res) => {
+                if (err) {
+                    throw new Error();
+                }
+
+                if (res) {
+                    return res;
+                }
+            });
+        }
+    }
+
+    throw new Error('NO_AUTH');
+};
+
+module.exports.get = async (args, req) => {
+    // check for auth token
+    const token = checkForToken(req);
+
+    if (token) {
+        // get user id from query arguments
+        const { id } = await getUserIdByToken(token);
+        if (id) {
+            const { _id, name } = args;
+
+            // assign to object only if args were provided
+            const query = {
+                ...(_id && { _id: _id },
+                name && { name: name },
+                { user_id: id }),
+            };
+
+            return Course.findOne(query, (err, res) => {
                 if (err) {
                     throw new Error();
                 }

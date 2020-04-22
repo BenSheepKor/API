@@ -81,6 +81,53 @@ describe('Courses', () => {
         });
     });
 
+    it('Retrieves a specific course ', (done) => {
+        const query = `query{
+            course(name: "${COURSE_NAME}"){
+                name,
+                schedule{
+                    day,
+                    start,
+                    end
+                },
+                semester,
+                grade,
+                professor
+            }
+        }`;
+
+        sendQuery(query).end((err, res) => {
+            if (err) {
+                throw new Error(err);
+            }
+
+            expect401(err, res);
+
+            logInWithValidCredentials().end((err, res) => {
+                if (err) {
+                    throw new Error(err);
+                }
+                const token = res.body.data.login.token;
+
+                sendAuthQuery(query, token).end((err, res) => {
+                    if (err) {
+                        throw new Error(err);
+                    }
+
+                    const course = res.body.data.course;
+
+                    console.log(course);
+
+                    course.should.have
+                        .property('name')
+                        .and.to.be.equal(COURSE_NAME);
+
+                    done();
+                });
+            });
+        });
+    });
+
     it('updates a course for a user', (done) => {
         const query = `mutation {
             updateCourse(name: "${COURSE_NAME}", schedule: {
