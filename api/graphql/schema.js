@@ -22,6 +22,7 @@ type Weather {
   timestamp: Int
 },
 type Course {
+  _id: String,
   name: String!,
   schedule: [CourseSchedule],
   professor: String,
