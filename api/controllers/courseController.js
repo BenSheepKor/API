@@ -38,14 +38,21 @@ module.exports.get = async (args, req) => {
         const { id } = await getUserIdByToken(token);
         if (id) {
             const { _id, name } = args;
+            let query = { user_id: id };
 
-            // assign to object only if args were provided
-            const query = {
-                ...(_id && { _id: _id },
-                name && { name: name },
-                { user_id: id }),
-            };
+            if (_id) {
+                query = {
+                    ...query,
+                    _id,
+                };
+            }
 
+            if (name) {
+                query = {
+                    ...query,
+                    name: name.toLowerCase(),
+                };
+            }
             return Course.findOne(query, (err, res) => {
                 if (err) {
                     throw new Error();

@@ -116,8 +116,6 @@ describe('Courses', () => {
 
                     const course = res.body.data.course;
 
-                    console.log(course);
-
                     course.should.have
                         .property('name')
                         .and.to.be.equal(COURSE_NAME);

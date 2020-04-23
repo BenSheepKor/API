@@ -183,13 +183,13 @@ const users = [
 const courses = [
     {
         user_id: 1,
-        name: 'Networks',
+        name: 'networks',
         semester: 3,
         grade: 9,
     },
     {
         user_id: 2,
-        name: 'French  translation',
+        name: 'french translation',
         semester: 1,
         schedule: [
             {
