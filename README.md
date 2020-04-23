@@ -12,7 +12,7 @@ The API is built using GraphQL, so in reality there are no endpointS but just a 
 
 #### Dev server :computer:
 
-`http://116.203.64.13:4000//graphql`
+`http://116.203.64.13:4000/graphql`
 
 Through that endpoint devs can access a number of queries and mutations that CRUD data.
 
@@ -119,4 +119,4 @@ After successfully loging in a user receives a JWT token. This token must be sto
 
 # To fellow developers and designers :eyes: :woman_technologist: :man_technologist: :woman_artist: :man_artist:
 
-Are you a web developer (front, back or full-stack) and you want to contribute? Reach out to any of the members and we will contact a short and, trust us, friendly interview, to best verify if both parties will merit. Same applies for UI/UX designers and really, anybody whou would like to get involved
+Are you a web developer (front, back or full-stack) and you want to contribute? Reach out to any of the members and we will conduct a short and, trust us, friendly interview, to best verify that both parties will merit from the co-operation. You won't be working for us you will be working with us. Same applies for UI/UX designers and really, anybody whou would like to get involved.
