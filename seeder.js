@@ -199,6 +199,24 @@ const courses = [
             },
         ],
     },
+    {
+        user_id: 3,
+        name: 'networks',
+        semester: 3,
+        grade: 9,
+    },
+    {
+        user_id: 3,
+        name: 'french translation',
+        semester: 1,
+        schedule: [
+            {
+                day: 3,
+                start: 520,
+                end: 660,
+            },
+        ],
+    },
 ];
 
 const faculties = [
