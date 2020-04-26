@@ -77,7 +77,7 @@ module.exports.create = async (args, req) => {
     if (token) {
         const { name, schedule, semester, grade, professor } = args;
 
-        if (name && schedule) {
+        if (name) {
             const { id } = await getUserIdByToken(token);
 
             // check that course has not been registered for specific user
